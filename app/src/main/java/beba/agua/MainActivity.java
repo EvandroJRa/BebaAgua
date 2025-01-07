@@ -86,6 +86,14 @@ public class MainActivity extends AppCompatActivity {
             salvarMetaDiaria();
         });
 
+        // Desabilita os botões de adição de água inicialmente
+        botao100ml.setEnabled(false);
+        botao150ml.setEnabled(false);
+        botao250ml.setEnabled(false);
+        botao500ml.setEnabled(false);
+        botao600ml.setEnabled(false);
+        botao750ml.setEnabled(false);
+
         // Configura os listeners para os botões de adição de água
         botao100ml.setOnClickListener(view -> adicionarConsumo(100));
         botao150ml.setOnClickListener(view -> adicionarConsumo(150));
@@ -122,31 +130,26 @@ public class MainActivity extends AppCompatActivity {
             // Desabilita o botão "Salvar Meta" após salvar
             botaoSalvarMeta.setEnabled(false);
 
+            // Habilita os botões de adição de água após salvar a meta
+            botao100ml.setEnabled(true);
+            botao150ml.setEnabled(true);
+            botao250ml.setEnabled(true);
+            botao500ml.setEnabled(true);
+            botao600ml.setEnabled(true);
+            botao750ml.setEnabled(true);
+
             atualizarInterface();
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Valor inválido para a meta", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Carrega a meta diária do SharedPreferences
     private void carregarMetaDiaria() {
-        metaDiaria = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-                .getFloat(META_DIARIA_KEY, 0);
-
-        // Define o valor da meta no EditText
-        editTextMeta.setText(String.format(Locale.getDefault(), "%.0f", metaDiaria));
-
-        // Verifica se já existe uma meta definida
-        if (metaDiaria > 0) {
-            // Desabilita o botão "Salvar Meta" se a meta já estiver definida
-            botaoSalvarMeta.setEnabled(false);
-        }
+        // ... (código existente) ...
     }
-
     // Adiciona a quantidade de água ao consumo atual
     private void adicionarConsumo(double quantidade) {
-        consumoAtual += quantidade;
-        atualizarInterface();
+        consumoAtual += quantidade; // Atualiza o consumo primeiro
 
         // Verifica se a meta foi atingida
         if (consumoAtual >= metaDiaria) {
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             botao600ml.setEnabled(false);
             botao750ml.setEnabled(false);
         }
-        atualizarInterface(); // Atualiza a interface depois3
+        atualizarInterface();
     }
 
     // Atualiza o texto de status e a barra de progresso
