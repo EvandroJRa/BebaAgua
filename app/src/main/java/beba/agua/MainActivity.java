@@ -1,12 +1,18 @@
 package beba.agua;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,6 +48,39 @@ public class MainActivity extends AppCompatActivity {
         // Carrega a meta diária do SharedPreferences
         carregarMetaDiaria();
 
+        // Abrir teclado numérico ao clicar no EditText
+        editTextMeta.setOnClickListener(view -> {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.showSoftInput(editTextMeta, InputMethodManager.SHOW_IMPLICIT);
+        });
+
+        // Configura o TextWatcher para o EditText da meta
+        editTextMeta.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Não é necessário implementar este método
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Não é necessário implementar este método
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Remove caracteres não numéricos, exceto ponto e vírgula
+                String texto = s.toString().replaceAll("[^0-9.,]", "");
+                // Substitui vírgula por ponto
+                texto = texto.replace(",", ".");
+
+                // Define o texto formatado no EditText
+                editTextMeta.removeTextChangedListener(this);
+                editTextMeta.setText(texto);
+                editTextMeta.setSelection(texto.length());
+                editTextMeta.addTextChangedListener(this);
+            }
+        });
+
         // Configura o listener para o botão "Salvar Meta"
         botaoSalvarMeta.setOnClickListener(view -> {
             salvarMetaDiaria();
@@ -67,31 +106,65 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        metaDiaria = Double.parseDouble(metaString);
+        // Remove caracteres não numéricos, exceto ponto e vírgula
+        metaString = metaString.replaceAll("[^0-9.,]", "");
+        // Substitui vírgula por ponto
+        metaString = metaString.replace(",", ".");
 
-        // Salva a meta usando SharedPreferences
-        getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
-                .putFloat(META_DIARIA_KEY, (float) metaDiaria)
-                .apply();
+        try {
+            metaDiaria = Double.parseDouble(metaString); // Salva a meta em ml
 
-        atualizarInterface();
+            // Salva a meta usando SharedPreferences
+            getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+                    .putFloat(META_DIARIA_KEY, (float) metaDiaria)
+                    .apply();
+
+            // Desabilita o botão "Salvar Meta" após salvar
+            botaoSalvarMeta.setEnabled(false);
+
+            atualizarInterface();
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Valor inválido para a meta", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Carrega a meta diária do SharedPreferences
     private void carregarMetaDiaria() {
         metaDiaria = getSharedPreferences("AppPrefs", MODE_PRIVATE)
                 .getFloat(META_DIARIA_KEY, 0);
+
+        // Define o valor da meta no EditText
+        editTextMeta.setText(String.format(Locale.getDefault(), "%.0f", metaDiaria));
+
+        // Verifica se já existe uma meta definida
+        if (metaDiaria > 0) {
+            // Desabilita o botão "Salvar Meta" se a meta já estiver definida
+            botaoSalvarMeta.setEnabled(false);
+        }
     }
 
     // Adiciona a quantidade de água ao consumo atual
     private void adicionarConsumo(double quantidade) {
         consumoAtual += quantidade;
         atualizarInterface();
+
+        // Verifica se a meta foi atingida
+        if (consumoAtual >= metaDiaria) {
+            Toast.makeText(MainActivity.this, "Parabéns, Meta concluída!", Toast.LENGTH_SHORT).show();
+            // Desabilita os botões de adição de água
+            botao100ml.setEnabled(false);
+            botao150ml.setEnabled(false);
+            botao250ml.setEnabled(false);
+            botao500ml.setEnabled(false);
+            botao600ml.setEnabled(false);
+            botao750ml.setEnabled(false);
+        }
+        atualizarInterface(); // Atualiza a interface depois3
     }
 
     // Atualiza o texto de status e a barra de progresso
     private void atualizarInterface() {
-        textoStatus.setText(String.format("%.0f ml / %.0f ml", consumoAtual, metaDiaria));
+        textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
 
         if (metaDiaria > 0) {
             int progresso = (int) ((consumoAtual / metaDiaria) * 100);
