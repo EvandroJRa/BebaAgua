@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Beba Agua</string>
+    <string name="registrar_comsumo">Registrar Comsumo</string>
+    <string name="insira_a_meta_em_ml">Insira a meta em ml</string>
+    <string name="texto_status">texto Status</string>
+    <string name="meta_diaria">Meta Diaria</string>
+    <string name="consumo_atual">Consumo Atual</string>
+    <string name="bem_vindo_ao_beba_gua">Bem-vindo ao Beba Água!</string>
 </resources>
