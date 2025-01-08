@@ -7,4 +7,5 @@
     <string name="consumo_atual">Consumo Atual</string>
     <string name="bem_vindo_ao_beba_gua">Bem-vindo ao Beba Água!</string>
     <string name="descricao_do_icone_do_aplicativo">ic_app_icon</string>
+    <string name="lembrete">lembrete</string>
 </resources>

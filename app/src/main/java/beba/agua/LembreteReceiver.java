@@ -19,7 +19,7 @@ public class LembreteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Lembrete recebido!");
+        Log.d(TAG, "---->>>>Lembrete recebido!");
 
         String mensagem = intent.getStringExtra("mensagem");
         if (mensagem == null || mensagem.isEmpty()) {
@@ -53,7 +53,7 @@ public class LembreteReceiver extends BroadcastReceiver {
             notificationManager.notify(NOTIFICACAO_ID, builder.build());
             Log.d(TAG, "Notificação exibida com sucesso.");
         } catch (Exception e) {
-            Log.e(TAG, "Erro ao exibir a notificação: " + e.getMessage(), e);
+            Log.e(TAG, "---->>>>Erro ao exibir a notificação: " + e.getMessage(), e);
         }
     }
 
@@ -71,7 +71,7 @@ public class LembreteReceiver extends BroadcastReceiver {
                 notificationManager.createNotificationChannel(canal);
                 Log.d(TAG, "Canal de notificação criado.");
             } else {
-                Log.e(TAG, "Erro ao criar o canal de notificação: NotificationManager é nulo.");
+                Log.e(TAG, "----->>>Erro ao criar o canal de notificação: NotificationManager é nulo.");
             }
         }
     }

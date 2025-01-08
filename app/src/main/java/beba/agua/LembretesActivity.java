@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -72,41 +73,41 @@ public class LembretesActivity extends AppCompatActivity {
     }
 
     private void agendarLembretes() {
-
-        // Define a frequência dos lembretes para 1 minuto (ignora RadioGroup)
-
-        long intervalo = TimeUnit.MINUTES.toMillis(1); // 1 minuto em milissegundos
-
-        Log.d("LembretesActivity", "----->>Intervalo de agendamento: " + intervalo);
-
         int hora = timePicker.getCurrentHour();
         int minuto = timePicker.getCurrentMinute();
-        String mensagem = editTextMensagem.getText().toString().trim();
+        String mensagem = editTextMensagem.getText().toString();
 
-//        if (mensagem.isEmpty()) {
-//            Toast.makeText(this, "Por favor, insira uma mensagem para o lembrete.", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//
-//        // Define a frequência com base no RadioGroup
-//        long intervalo = obterFrequenciaSelecionada();
-//        if (intervalo == 0) {
-//            Toast.makeText(this, "Selecione uma frequência para o lembrete.", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-
-        // Configura o horário inicial do lembrete
-        Calendar horarioLembrete = Calendar.getInstance();
-        horarioLembrete.set(Calendar.HOUR_OF_DAY, hora);
-        horarioLembrete.set(Calendar.MINUTE, minuto);
-        horarioLembrete.set(Calendar.SECOND, 0);
-
-        // Se o horário já passou, agenda para o próximo dia
-        if (horarioLembrete.before(Calendar.getInstance())) {
-            horarioLembrete.add(Calendar.DAY_OF_MONTH, 1);
+        // Verifica se as notificações estão habilitadas
+        Switch switchNotificacoes = findViewById(R.id.switch1lembete);
+        if (!switchNotificacoes.isChecked()) {
+            // Cancela notificações
+            cancelarNotificacoes();
+            Toast.makeText(this, "Notificações desabilitadas!", Toast.LENGTH_SHORT).show();
+            Log.d("LembretesActivity", "---->>Notificações desabilitadas pelo usuário.");
+            return;
         }
 
-        // Cria o Intent para o BroadcastReceiver
+        // Define a frequência dos lembretes (baseado no RadioGroup Frequência)
+        long intervalo = TimeUnit.MINUTES.toMillis(1); // Valor padrão 1 HOURS
+        if (radioGroupFrequencia.getCheckedRadioButtonId() == R.id.radioButton30Min) {
+            intervalo = TimeUnit.MINUTES.toMillis(30); // VOLTAR PARA 30 APOS FINALIZAR OS TESTES
+        } else if (radioGroupFrequencia.getCheckedRadioButtonId() == R.id.radioButton2Horas) {
+            intervalo = TimeUnit.HOURS.toMillis(2);
+        }
+
+        Log.d("LembretesActivity", "--->>>Intervalo definido para: " + intervalo + " milissegundos");
+
+        // Configura o calendário
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hora);
+        calendar.set(Calendar.MINUTE, minuto);
+        calendar.set(Calendar.SECOND, 0);
+
+        if (calendar.before(Calendar.getInstance())) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        // Cria o Intent e o PendingIntent
         Intent intent = new Intent(this, LembreteReceiver.class);
         intent.setAction("beba.agua.LembreteReceiver");
         intent.putExtra("mensagem", mensagem);
@@ -117,37 +118,28 @@ public class LembretesActivity extends AppCompatActivity {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
-        Log.d("LembretesActivity", "---->>>Agendando lembrete...");
 
-        // Configura o AlarmManager
+        // Agenda o alarme
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        if (alarmManager != null) {
-            alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    horarioLembrete.getTimeInMillis(),
-                    intervalo,
-                    pendingIntent
-            );
-            Toast.makeText(this, "Lembrete agendado com sucesso!", Toast.LENGTH_SHORT).show();
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), intervalo, pendingIntent);
 
-            Log.d("LembretesActivity", "---->>>Lembrete agendado: " + horarioLembrete.getTime());
-        } else {
-            Toast.makeText(this, "----->>>Erro ao agendar o lembrete.", Toast.LENGTH_SHORT).show();
-            Log.e("LembretesActivity", "---->>>AlarmManager não disponível.");
-        }
-
+        Toast.makeText(this, "Lembrete agendado com sucesso!", Toast.LENGTH_SHORT).show();
+        Log.d("LembretesActivity", "----->>>Lembrete agendado com sucesso!");
         finish();
     }
 
-    private long obterFrequenciaSelecionada() {
-        int selecionadoId = radioGroupFrequencia.getCheckedRadioButtonId();
-        if (selecionadoId == R.id.radioButton1Hora) {
-            return TimeUnit.HOURS.toMillis(1);
-        } else if (selecionadoId == R.id.radioButton2Horas) {
-            return TimeUnit.HOURS.toMillis(2);
-        } else if (selecionadoId == R.id.radioButton30Min) {
-            return TimeUnit.MINUTES.toMillis(30);
-        }
-        return 0;
+    // Método para cancelar notificações
+    private void cancelarNotificacoes() {
+        Intent intent = new Intent(this, LembreteReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
     }
 }
+
