@@ -48,7 +48,7 @@
     <EditText
         android:id="@+id/editTextNumber"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
@@ -165,6 +165,16 @@
             android:text="750 ml" />
 
     </GridLayout>
+    <Button
+        android:id="@+id/botaoAbrirLembretes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Configurar Lembretes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gridLayoutBotoes" />
 
     <ProgressBar
         android:id="@+id/barraProgresso"
@@ -172,11 +182,13 @@
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
+        android:layout_marginBottom="8dp"
         android:indeterminate="false"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gridLayoutBotoes" />
+        app:layout_constraintTop_toBottomOf="@+id/botaoAbrirLembretes" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

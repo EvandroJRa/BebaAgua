@@ -2,6 +2,7 @@ package beba.agua;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -32,6 +33,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button botaoAbrirLembretes = findViewById(R.id.botaoAbrirLembretes);
+        botaoAbrirLembretes.setOnClickListener(view -> {
+            // Cria um Intent para abrir a LembretesActivity
+            Intent intent = new Intent(MainActivity.this, LembretesActivity.class);
+            startActivity(intent);
+        });
 
         // Obtém referências aos elementos da interface do usuário
         editTextMeta = findViewById(R.id.editTextNumber);
