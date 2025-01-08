@@ -78,11 +78,18 @@
             android:text="A cada 1 hora" />
 
         <RadioButton
+            android:id="@+id/radioButton30Min"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="30 minutos" />
+
+        <RadioButton
             android:id="@+id/radioButton2Horas"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="A cada 2 horas" />
+
 
     </RadioGroup>
 
@@ -110,8 +117,8 @@
 
     <ImageButton
         android:id="@+id/botaoConfigurarNotificacoes"
-        android:layout_width="35dp"
-        android:layout_height="39dp"
+        android:layout_width="41dp"
+        android:layout_height="49dp"
         android:layout_marginTop="8dp"
         android:src="@drawable/icon_notificacao"
         app:layout_constraintBottom_toTopOf="@+id/textViewMensagem"
