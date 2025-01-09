@@ -44,6 +44,11 @@
             android:name=".LembretesActivity"
             android:exported="false" />
 
+        <!-- Tela de Historico -->
+        <activity
+            android:name=".HistoricoActivity"
+            android:exported="false" />
+
         <!-- Atividade principal (Tela Inicial) -->
         <activity
             android:name=".MainActivity"

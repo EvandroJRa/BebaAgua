@@ -31,7 +31,7 @@
         android:text="@string/bem_vindo_ao_beba_gua"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iconapp" />
+        app:layout_constraintTop_toBottomOf="@id/iconapp" />
 
     <TextView
         android:id="@+id/campoMetaDiaria"
@@ -43,7 +43,7 @@
         android:text="@string/meta_diaria"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoBemVindo" />
+        app:layout_constraintTop_toBottomOf="@id/textoBemVindo" />
 
     <EditText
         android:id="@+id/editTextNumber"
@@ -58,7 +58,7 @@
         android:maxWidth="400dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/campoMetaDiaria" />
+        app:layout_constraintTop_toBottomOf="@id/campoMetaDiaria" />
 
     <Button
         android:id="@+id/botaoSalvarMeta"
@@ -70,7 +70,7 @@
         android:text="Salvar Meta"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextNumber" />
+        app:layout_constraintTop_toBottomOf="@id/editTextNumber" />
 
     <TextView
         android:id="@+id/textoConsumoAtual"
@@ -82,7 +82,7 @@
         android:text="Consumo Atual:"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/botaoSalvarMeta" />
+        app:layout_constraintTop_toBottomOf="@id/botaoSalvarMeta" />
 
     <TextView
         android:id="@+id/textoStatus"
@@ -94,7 +94,7 @@
         android:text="0 ml / 0 ml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoConsumoAtual" />
+        app:layout_constraintTop_toBottomOf="@id/textoConsumoAtual" />
 
     <GridLayout
         android:id="@+id/gridLayoutBotoes"
@@ -108,7 +108,7 @@
         android:rowCount="2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoStatus">
+        app:layout_constraintTop_toBottomOf="@id/textoStatus">
 
         <Button
             android:id="@+id/botao100ml"
@@ -165,6 +165,7 @@
             android:text="750 ml" />
 
     </GridLayout>
+
     <Button
         android:id="@+id/botaoAbrirLembretes"
         android:layout_width="wrap_content"
@@ -174,7 +175,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gridLayoutBotoes" />
+        app:layout_constraintTop_toBottomOf="@id/gridLayoutBotoes" />
+
+    <!-- 🔥 Novo botão para abrir o histórico de consumo -->
+    <Button
+        android:id="@+id/botaoHistorico"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Histórico de Consumo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/botaoAbrirLembretes" />
 
     <ProgressBar
         android:id="@+id/barraProgresso"
@@ -189,6 +202,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/botaoAbrirLembretes" />
+        app:layout_constraintTop_toBottomOf="@id/botaoHistorico" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

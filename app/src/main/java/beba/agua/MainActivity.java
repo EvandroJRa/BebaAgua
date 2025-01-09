@@ -10,30 +10,31 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText editTextMeta;
-    private Button botaoSalvarMeta, botao100ml, botao150ml, botao250ml, botao500ml, botao600ml, botao750ml;
+    private Button botaoSalvarMeta, botao100ml, botao150ml, botao250ml, botao500ml, botao600ml, botao750ml, botaoHistorico;
     private TextView textoStatus;
     private ProgressBar barraProgresso;
 
     private double consumoAtual = 0.0;
     private double metaDiaria = 0.0;
 
+    private DatabaseHelper dbHelper;
+
     private static final String PREFS_NAME = "AppPrefs";
     private static final String META_DIARIA_KEY = "metaDiaria";
+    private static final String CONSUMO_ATUAL_KEY = "consumoAtual";
     private static final int REQUEST_CODE_NOTIFICACAO = 101;
 
     @Override
@@ -41,12 +42,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        dbHelper = new DatabaseHelper(this);
         inicializarComponentes();
         configurarListeners();
         carregarMetaDiaria();
         atualizarInterface();
 
-        solicitarPermissaoNotificacoes(); // 🔔 Solicita a permissão de notificações no Android 13+
+        solicitarPermissaoNotificacoes(); // 🔔 Garantindo que a permissão seja solicitada corretamente
+
+        Button botaoAbrirLembretes;
+        botaoAbrirLembretes = findViewById(R.id.botaoAbrirLembretes);
+        botaoAbrirLembretes.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, LembretesActivity.class);
+            startActivity(intent);
+        });
+
+
     }
 
     // 🔔 **Solicita permissão para notificações no Android 13+**
@@ -60,12 +71,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 🔹 **Inicializa componentes da UI**
     private void inicializarComponentes() {
         editTextMeta = findViewById(R.id.editTextNumber);
         botaoSalvarMeta = findViewById(R.id.botaoSalvarMeta);
         textoStatus = findViewById(R.id.textoStatus);
         barraProgresso = findViewById(R.id.barraProgresso);
+        botaoHistorico = findViewById(R.id.botaoHistorico);
 
         botao100ml = findViewById(R.id.botao100ml);
         botao150ml = findViewById(R.id.botao150ml);
@@ -74,39 +85,13 @@ public class MainActivity extends AppCompatActivity {
         botao600ml = findViewById(R.id.botao600ml);
         botao750ml = findViewById(R.id.botao750ml);
 
-        Button botaoAbrirLembretes = findViewById(R.id.botaoAbrirLembretes);
-        botaoAbrirLembretes.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, LembretesActivity.class);
+        botaoHistorico.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, HistoricoActivity.class);
             startActivity(intent);
         });
-
-        setBotaoEstado(false); // Inicialmente, os botões de consumo ficam desativados
     }
 
-    // 🔹 **Configura eventos de clique e entrada de dados**
     private void configurarListeners() {
-        editTextMeta.setOnClickListener(view -> {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            imm.showSoftInput(editTextMeta, InputMethodManager.SHOW_IMPLICIT);
-        });
-
-        editTextMeta.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                String texto = s.toString().replaceAll("[^\\d.,]", "").replace(",", ".");
-                editTextMeta.removeTextChangedListener(this);
-                editTextMeta.setText(texto);
-                editTextMeta.setSelection(texto.length());
-                editTextMeta.addTextChangedListener(this);
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-        });
-
         botaoSalvarMeta.setOnClickListener(view -> salvarMetaDiaria());
 
         botao100ml.setOnClickListener(view -> adicionarConsumo(100));
@@ -117,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
         botao750ml.setOnClickListener(view -> adicionarConsumo(750));
     }
 
-    // 🔹 **Salva a meta diária no SharedPreferences**
     private void salvarMetaDiaria() {
         String metaString = editTextMeta.getText().toString();
         if (metaString.isEmpty()) {
@@ -125,90 +109,44 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        metaString = metaString.replaceAll("[^\\d.,]", "").replace(",", ".");
-        try {
-            metaDiaria = Double.parseDouble(metaString);
+        metaDiaria = Double.parseDouble(metaString);
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                .putFloat(META_DIARIA_KEY, (float) metaDiaria)
+                .apply();
 
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                    .putFloat(META_DIARIA_KEY, (float) metaDiaria)
-                    .apply();
-
-            botaoSalvarMeta.setEnabled(false);
-            setBotaoEstado(true);
-            atualizarInterface();
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Valor inválido para a meta", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    // 🔹 **Carrega a meta salva do SharedPreferences**
-    private void carregarMetaDiaria() {
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        metaDiaria = prefs.getFloat(META_DIARIA_KEY, 0.0f);
-        consumoAtual = prefs.getFloat("consumoAtual", 0.0f);
-
-        if (metaDiaria > 0) {
-            botaoSalvarMeta.setEnabled(false);
-            setBotaoEstado(true);
-        }
-
-        Log.d("MainActivity", "📌 Meta diária carregada: " + metaDiaria + "ml | Consumo atual: " + consumoAtual + "ml");
-    }
-
-    // 🔹 **Adiciona a quantidade de água ao consumo atual**
-    private void adicionarConsumo(double quantidade) {
-        consumoAtual += quantidade;
-
-        // 🔥 Salvar consumo atualizado no SharedPreferences
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putFloat("consumoAtual", (float) consumoAtual);
-        editor.apply();
-
-        Log.d("MainActivity", "✅ Água adicionada: " + quantidade + "ml | Total: " + consumoAtual + "ml");
-
-        if (consumoAtual >= metaDiaria) {
-            Toast.makeText(this, "Parabéns, Meta concluída!", Toast.LENGTH_LONG).show();
-
-            // 🔥 Perguntar se o usuário quer resetar o consumo
-            new AlertDialog.Builder(this)
-                    .setTitle("Meta atingida!")
-                    .setMessage("Você deseja zerar o consumo de água para um novo dia?")
-                    .setPositiveButton("Sim", (dialog, which) -> {
-                        consumoAtual = 0;
-                        SharedPreferences.Editor resetEditor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
-                        resetEditor.putFloat("consumoAtual", (float) consumoAtual);
-                        resetEditor.apply();
-                        atualizarInterface();
-                    })
-                    .setNegativeButton("Não", null)
-                    .show();
-        }
-
-        // 🔄 Atualiza a interface para refletir o consumo
+        botaoSalvarMeta.setEnabled(false);
         atualizarInterface();
     }
-    // 🔹 **Atualiza a interface com o progresso**
-        private void atualizarInterface() {
-            textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
 
-            if (metaDiaria > 0) {
-                int progresso = (int) ((consumoAtual / metaDiaria) * 100);
-                barraProgresso.setProgress(progresso);
-            } else {
-                barraProgresso.setProgress(0);
-            }
+    private void carregarMetaDiaria() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        metaDiaria = prefs.getFloat(META_DIARIA_KEY, 2000.0f);
+        consumoAtual = prefs.getFloat(CONSUMO_ATUAL_KEY, 0.0f);
+    }
 
-            Log.d("MainActivity", "🔄 Interface atualizada: " + consumoAtual + "ml / " + metaDiaria + "ml");
+    private void adicionarConsumo(double quantidade) {
+        String dataAtual = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        // 🔄 Atualiza no banco de dados
+        dbHelper.registrarConsumo(dataAtual, quantidade, metaDiaria);
+
+        // 🔄 Atualiza a interface
+        consumoAtual += quantidade;
+        SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putFloat(CONSUMO_ATUAL_KEY, (float) consumoAtual);
+        editor.apply();
+
+        atualizarInterface();
+    }
+
+    private void atualizarInterface() {
+        textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
+
+        if (metaDiaria > 0) {
+            int progresso = (int) ((consumoAtual / metaDiaria) * 100);
+            barraProgresso.setProgress(progresso);
+        } else {
+            barraProgresso.setProgress(0);
         }
-
-    // 🔹 **Ativa ou desativa os botões de consumo**
-    private void setBotaoEstado(boolean estado) {
-        botao100ml.setEnabled(estado);
-        botao150ml.setEnabled(estado);
-        botao250ml.setEnabled(estado);
-        botao500ml.setEnabled(estado);
-        botao600ml.setEnabled(estado);
-        botao750ml.setEnabled(estado);
     }
 }
