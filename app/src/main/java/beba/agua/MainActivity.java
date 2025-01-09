@@ -1,15 +1,18 @@
 package beba.agua;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -140,37 +143,64 @@ public class MainActivity extends AppCompatActivity {
 
     // 🔹 **Carrega a meta salva do SharedPreferences**
     private void carregarMetaDiaria() {
-        metaDiaria = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getFloat(META_DIARIA_KEY, 0.0f);
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        metaDiaria = prefs.getFloat(META_DIARIA_KEY, 0.0f);
+        consumoAtual = prefs.getFloat("consumoAtual", 0.0f);
 
         if (metaDiaria > 0) {
             botaoSalvarMeta.setEnabled(false);
             setBotaoEstado(true);
         }
+
+        Log.d("MainActivity", "📌 Meta diária carregada: " + metaDiaria + "ml | Consumo atual: " + consumoAtual + "ml");
     }
 
     // 🔹 **Adiciona a quantidade de água ao consumo atual**
     private void adicionarConsumo(double quantidade) {
         consumoAtual += quantidade;
 
+        // 🔥 Salvar consumo atualizado no SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putFloat("consumoAtual", (float) consumoAtual);
+        editor.apply();
+
+        Log.d("MainActivity", "✅ Água adicionada: " + quantidade + "ml | Total: " + consumoAtual + "ml");
+
         if (consumoAtual >= metaDiaria) {
             Toast.makeText(this, "Parabéns, Meta concluída!", Toast.LENGTH_LONG).show();
-            setBotaoEstado(false);
+
+            // 🔥 Perguntar se o usuário quer resetar o consumo
+            new AlertDialog.Builder(this)
+                    .setTitle("Meta atingida!")
+                    .setMessage("Você deseja zerar o consumo de água para um novo dia?")
+                    .setPositiveButton("Sim", (dialog, which) -> {
+                        consumoAtual = 0;
+                        SharedPreferences.Editor resetEditor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
+                        resetEditor.putFloat("consumoAtual", (float) consumoAtual);
+                        resetEditor.apply();
+                        atualizarInterface();
+                    })
+                    .setNegativeButton("Não", null)
+                    .show();
         }
+
+        // 🔄 Atualiza a interface para refletir o consumo
         atualizarInterface();
     }
-
     // 🔹 **Atualiza a interface com o progresso**
-    private void atualizarInterface() {
-        textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
+        private void atualizarInterface() {
+            textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
 
-        if (metaDiaria > 0) {
-            int progresso = (int) ((consumoAtual / metaDiaria) * 100);
-            barraProgresso.setProgress(progresso);
-        } else {
-            barraProgresso.setProgress(0);
+            if (metaDiaria > 0) {
+                int progresso = (int) ((consumoAtual / metaDiaria) * 100);
+                barraProgresso.setProgress(progresso);
+            } else {
+                barraProgresso.setProgress(0);
+            }
+
+            Log.d("MainActivity", "🔄 Interface atualizada: " + consumoAtual + "ml / " + metaDiaria + "ml");
         }
-    }
 
     // 🔹 **Ativa ou desativa os botões de consumo**
     private void setBotaoEstado(boolean estado) {
