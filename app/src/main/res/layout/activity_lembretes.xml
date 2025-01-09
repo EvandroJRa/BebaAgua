@@ -74,20 +74,20 @@
             android:id="@+id/radioButton1Hora"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="A cada 1 hora" />
+            android:text="@string/a_cada_1_hora" />
 
         <RadioButton
             android:id="@+id/radioButton30Min"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="30 minutos" />
+            android:text="@string/_30_minutos" />
 
         <RadioButton
             android:id="@+id/radioButton2Horas"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="A cada 2 horas" />
+            android:text="@string/a_cada_2_horas" />
 
 
     </RadioGroup>

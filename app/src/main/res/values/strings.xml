@@ -8,4 +8,7 @@
     <string name="bem_vindo_ao_beba_gua">Bem-vindo ao Beba Água!</string>
     <string name="descricao_do_icone_do_aplicativo">ic_app_icon</string>
     <string name="lembrete">lembrete</string>
+    <string name="a_cada_2_horas">2 horas</string>
+    <string name="_30_minutos">30min.</string>
+    <string name="a_cada_1_hora"> 1 hora</string>
 </resources>

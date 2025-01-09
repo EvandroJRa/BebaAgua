@@ -1,13 +1,18 @@
 package beba.agua;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -19,17 +24,18 @@ public class LembreteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "---->>>>Lembrete recebido!");
+        Log.d(TAG, "📢 Lembrete recebido! Tentando exibir notificação...");
 
+        // Obtendo a mensagem do lembrete
         String mensagem = intent.getStringExtra("mensagem");
         if (mensagem == null || mensagem.isEmpty()) {
             mensagem = "Hora de beber água!";
         }
 
-        // Cria o canal de notificação, se necessário
+        // Criar o canal de notificação (para Android 8.0 ou superior)
         criarCanalNotificacao(context);
 
-        // Cria um Intent para abrir a MainActivity ao clicar na notificação
+        // Criar Intent para abrir a MainActivity ao clicar na notificação
         Intent intentMainActivity = new Intent(context, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context,
@@ -38,40 +44,54 @@ public class LembreteReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
 
-        // Configura a notificação
+        // Criar a notificação
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CANAL_ID)
                 .setSmallIcon(R.drawable.icon_gota) // Ícone da notificação
-                .setContentTitle("Lembrete de hidratação")
+                .setContentTitle("Lembrete de Hidratação 💧")
                 .setContentText(mensagem)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // Alta prioridade para garantir que apareça
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true); // Remove a notificação ao clicar
 
-        // Exibe a notificação
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        // 🔍 **Verificação de permissão (Android 13+)**
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "⚠️ Permissão de notificação não concedida! Notificação não será exibida.");
+                Toast.makeText(context, "Ative as notificações para receber lembretes!", Toast.LENGTH_LONG).show();
+                return; // **Sai do método para evitar a SecurityException**
+            }
+        }
+
         try {
             notificationManager.notify(NOTIFICACAO_ID, builder.build());
-            Log.d(TAG, "Notificação exibida com sucesso.");
+            Log.d(TAG, "✅ Notificação exibida com sucesso.");
         } catch (Exception e) {
-            Log.e(TAG, "---->>>>Erro ao exibir a notificação: " + e.getMessage(), e);
+            Log.e(TAG, "❌ Erro ao exibir a notificação: " + e.getMessage(), e);
         }
     }
 
+    // 🔹 **Método para criar o canal de notificação no Android 8+**
     private void criarCanalNotificacao(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence nome = "Lembretes de Hidratação";
             String descricao = "Canal para notificações de lembretes de água";
-            int importancia = NotificationManager.IMPORTANCE_DEFAULT;
+            int importancia = NotificationManager.IMPORTANCE_HIGH; // ALTA prioridade
 
             NotificationChannel canal = new NotificationChannel(CANAL_ID, nome, importancia);
             canal.setDescription(descricao);
 
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             if (notificationManager != null) {
-                notificationManager.createNotificationChannel(canal);
-                Log.d(TAG, "Canal de notificação criado.");
+                if (notificationManager.getNotificationChannel(CANAL_ID) == null) {
+                    notificationManager.createNotificationChannel(canal);
+                    Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
+                } else {
+                    Log.d(TAG, "🔄 Canal de notificação já existente.");
+                }
             } else {
-                Log.e(TAG, "----->>>Erro ao criar o canal de notificação: NotificationManager é nulo.");
+                Log.e(TAG, "⚠️ Erro ao criar o canal de notificação: NotificationManager é nulo.");
             }
         }
     }

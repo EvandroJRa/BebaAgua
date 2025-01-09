@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 🔹 Permissão necessária para enviar notificações no Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:allowBackup="true"
@@ -15,24 +16,31 @@
         android:theme="@style/Theme.BebaAgua"
         tools:targetApi="33">
 
-        <receiver android:name=".LembreteReceiver"
-            android:exported="true">
+        <!-- 🔹 **Correção no BroadcastReceiver** -->
+        <receiver
+            android:name=".LembreteReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
                 <action android:name="beba.agua.LembreteReceiver" />
             </intent-filter>
         </receiver>
 
+        <!-- 🔹 Tela de lembretes -->
         <activity
             android:name=".LembretesActivity"
             android:exported="false" />
+
+        <!-- 🔹 Atividade principal (Tela Inicial) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
+
 </manifest>

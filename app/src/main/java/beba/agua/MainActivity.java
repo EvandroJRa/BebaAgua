@@ -1,7 +1,13 @@
 package beba.agua;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -24,7 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private double consumoAtual = 0.0;
     private double metaDiaria = 0.0;
 
+    private static final String PREFS_NAME = "AppPrefs";
     private static final String META_DIARIA_KEY = "metaDiaria";
+    private static final int REQUEST_CODE_NOTIFICACAO = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +43,22 @@ public class MainActivity extends AppCompatActivity {
         configurarListeners();
         carregarMetaDiaria();
         atualizarInterface();
+
+        solicitarPermissaoNotificacoes(); // 🔔 Solicita a permissão de notificações no Android 13+
     }
 
+    // 🔔 **Solicita permissão para notificações no Android 13+**
+    private void solicitarPermissaoNotificacoes() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_CODE_NOTIFICACAO);
+            }
+        }
+    }
+
+    // 🔹 **Inicializa componentes da UI**
     private void inicializarComponentes() {
         editTextMeta = findViewById(R.id.editTextNumber);
         botaoSalvarMeta = findViewById(R.id.botaoSalvarMeta);
@@ -56,9 +78,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        setBotaoEstado(false);
+        setBotaoEstado(false); // Inicialmente, os botões de consumo ficam desativados
     }
 
+    // 🔹 **Configura eventos de clique e entrada de dados**
     private void configurarListeners() {
         editTextMeta.setOnClickListener(view -> {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -77,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
@@ -91,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         botao750ml.setOnClickListener(view -> adicionarConsumo(750));
     }
 
+    // 🔹 **Salva a meta diária no SharedPreferences**
     private void salvarMetaDiaria() {
         String metaString = editTextMeta.getText().toString();
         if (metaString.isEmpty()) {
@@ -102,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             metaDiaria = Double.parseDouble(metaString);
 
-            getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
                     .putFloat(META_DIARIA_KEY, (float) metaDiaria)
                     .apply();
 
@@ -114,8 +139,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 🔹 **Carrega a meta salva do SharedPreferences**
     private void carregarMetaDiaria() {
-        metaDiaria = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        metaDiaria = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .getFloat(META_DIARIA_KEY, 0.0f);
 
         if (metaDiaria > 0) {
@@ -124,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 🔹 **Adiciona a quantidade de água ao consumo atual**
     private void adicionarConsumo(double quantidade) {
         consumoAtual += quantidade;
 
@@ -134,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
         atualizarInterface();
     }
 
+    // 🔹 **Atualiza a interface com o progresso**
     private void atualizarInterface() {
         textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
 
@@ -145,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 🔹 **Ativa ou desativa os botões de consumo**
     private void setBotaoEstado(boolean estado) {
         botao100ml.setEnabled(estado);
         botao150ml.setEnabled(estado);
