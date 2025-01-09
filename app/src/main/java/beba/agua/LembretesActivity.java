@@ -2,6 +2,7 @@ package beba.agua;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -198,4 +199,52 @@ public class LembretesActivity extends AppCompatActivity {
         alarmManager.cancel(PendingIntent.getBroadcast(this, 0, new Intent(this, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE));
         Toast.makeText(this, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
     }
+    // reaagendar lembretes para o bootReceiver
+    public static void reagendarLembretes(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("LembreteConfig", Context.MODE_PRIVATE);
+
+        boolean notificacaoAtivada = prefs.getBoolean("notificacaoAtivada", true);
+        if (!notificacaoAtivada) {
+            Log.d("LembretesActivity", "🔕 Lembretes desativados, nada será reativado.");
+            return;
+        }
+
+        String mensagem = prefs.getString("mensagemLembrete", "Hora de beber água!");
+        int radioSelecionado = prefs.getInt("frequenciaLembrete", R.id.radioButton1Hora);
+        int hora = prefs.getInt("horaLembrete", 8);  // Default: 08:00
+        int minuto = prefs.getInt("minutoLembrete", 0);
+
+        int intervaloMinutos = 60; // Padrão de 1 hora
+        if (radioSelecionado == R.id.radioButton30Min) {
+            intervaloMinutos = 30;
+        } else if (radioSelecionado == R.id.radioButton2Horas) {
+            intervaloMinutos = 120;
+        }
+
+        Log.d("LembretesActivity", "🔄 Reagendando lembrete para " + hora + ":" + minuto + " a cada " + intervaloMinutos + " minutos");
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hora);
+        calendar.set(Calendar.MINUTE, minuto);
+        calendar.set(Calendar.SECOND, 0);
+
+        if (calendar.before(Calendar.getInstance())) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        Intent intent = new Intent(context, LembreteReceiver.class);
+        intent.setAction("beba.agua.LembreteReceiver");
+        intent.putExtra("mensagem", mensagem);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), intervaloMillis, pendingIntent);
+
+        Log.d("LembretesActivity", "✅ Lembrete reagendado com sucesso!");
+    }
+
 }
