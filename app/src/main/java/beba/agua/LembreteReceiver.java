@@ -24,9 +24,8 @@ public class LembreteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "📢 Lembrete recebido! Tentando exibir notificação...");
+        Log.d(TAG, "---->>>> Lembrete recebido! Tentando exibir notificação...");
 
-        // Obtendo a mensagem do lembrete
         String mensagem = intent.getStringExtra("mensagem");
         if (mensagem == null || mensagem.isEmpty()) {
             mensagem = "Hora de beber água!";
@@ -41,13 +40,13 @@ public class LembreteReceiver extends BroadcastReceiver {
                 context,
                 0,
                 intentMainActivity,
-                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
 
         // Criar a notificação
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CANAL_ID)
                 .setSmallIcon(R.drawable.icon_gota) // Ícone da notificação
-                .setContentTitle("Lembrete de Hidratação 💧")
+                .setContentTitle("Lembrete de hidratação")
                 .setContentText(mensagem)
                 .setPriority(NotificationCompat.PRIORITY_HIGH) // Alta prioridade para garantir que apareça
                 .setContentIntent(pendingIntent)
@@ -68,11 +67,10 @@ public class LembreteReceiver extends BroadcastReceiver {
             notificationManager.notify(NOTIFICACAO_ID, builder.build());
             Log.d(TAG, "✅ Notificação exibida com sucesso.");
         } catch (Exception e) {
-            Log.e(TAG, "❌ Erro ao exibir a notificação: " + e.getMessage(), e);
+            Log.e(TAG, "---->>>> Erro ao exibir a notificação: " + e.getMessage(), e);
         }
     }
 
-    // 🔹 **Método para criar o canal de notificação no Android 8+**
     private void criarCanalNotificacao(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence nome = "Lembretes de Hidratação";
@@ -84,14 +82,10 @@ public class LembreteReceiver extends BroadcastReceiver {
 
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             if (notificationManager != null) {
-                if (notificationManager.getNotificationChannel(CANAL_ID) == null) {
-                    notificationManager.createNotificationChannel(canal);
-                    Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
-                } else {
-                    Log.d(TAG, "🔄 Canal de notificação já existente.");
-                }
+                notificationManager.createNotificationChannel(canal);
+                Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
             } else {
-                Log.e(TAG, "⚠️ Erro ao criar o canal de notificação: NotificationManager é nulo.");
+                Log.e(TAG, "----->>> Erro ao criar o canal de notificação: NotificationManager é nulo.");
             }
         }
     }
