@@ -36,7 +36,7 @@ public class LembretesActivity extends AppCompatActivity {
     private static final String KEY_FREQUENCIA = "frequenciaLembrete";
     private static final String KEY_HORA = "horaLembrete";
     private static final String KEY_MINUTO = "minutoLembrete";
-    private static final String KEY_NOTIFICACAO = "notificacaoAtivada";
+    static final String KEY_NOTIFICACAO = "notificacaoAtivada";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,13 +195,33 @@ public class LembretesActivity extends AppCompatActivity {
         else if (radioSelecionado == R.id.radioButton2Horas) return 120;
         else return 60;
     }
-
+    //Cancelar Notificação
     private void cancelarNotificacoes() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.cancel(PendingIntent.getBroadcast(this, 0, new Intent(this, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE));
         Toast.makeText(this, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "❌ Lembretes cancelados.");
     }
+
+    //Cancelar Lembretes
+    public static void cancelarLembretes(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean lembretesAtivados = prefs.getBoolean(KEY_NOTIFICACAO, true); // 🔹 Verifica se estavam ativos
+
+        if (lembretesAtivados) { // 🔥 Apenas salva se estavam ativados antes de cancelar
+            prefs.edit().putBoolean("LEMBRETES_FORAM_ATIVADOS", true).apply();
+        }
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, new Intent(context, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE);
+
+        alarmManager.cancel(pendingIntent);
+
+        prefs.edit().putBoolean(KEY_NOTIFICACAO, false).apply(); // 🔹 Atualiza estado no SharedPreferences
+        Log.d(TAG, "❌ Lembretes foram cancelados pelo sistema.");
+    }
+
 
     public static void reagendarLembretes(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);

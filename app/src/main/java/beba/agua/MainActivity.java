@@ -1,5 +1,8 @@
 package beba.agua;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+import static beba.agua.LembretesActivity.KEY_NOTIFICACAO;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -138,20 +141,27 @@ public class MainActivity extends AppCompatActivity {
 
     // 🔹 **Adiciona o consumo de água**
     private void adicionarConsumo(double quantidade) {
-        String dataAtual = obterDataAtual();
-        dbHelper.registrarConsumo(dataAtual, consumoAtual + quantidade, metaDiaria);
+        String dataAtual = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
+        // 🔄 Atualiza no banco de dados
+        dbHelper.registrarConsumo(dataAtual, quantidade, metaDiaria);
+
+        // 🔄 Atualiza a interface
         consumoAtual += quantidade;
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                .putFloat(CONSUMO_ATUAL_KEY, (float) consumoAtual)
-                .apply();
-
-        atualizarInterface();
+        SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putFloat(CONSUMO_ATUAL_KEY, (float) consumoAtual);
 
         if (consumoAtual >= metaDiaria) {
-            Toast.makeText(this, "Parabéns, Meta concluída!", Toast.LENGTH_LONG).show();
-            desativarBotoesConsumo();
+            Toast.makeText(this, "🎉 Parabéns! Meta concluída!", Toast.LENGTH_LONG).show();
+            desativarBotoesConsumo(); // 🔥 Desativa os botões de consumo
+            editor.putBoolean("META_CONCLUIDA_HOJE", true); // ✅ Salva que a meta foi concluída hoje
+            editor.putBoolean("META_CONCLUIDA_ONTEM", true); // 🔄 Para ser usada no próximo dia
+            LembretesActivity.cancelarLembretes(this); // ❌ Desativa os lembretes
+            Log.d(TAG, "🎯 Meta concluída! Lembretes desativados.");
         }
+
+        editor.apply();
+        atualizarInterface();
     }
 
     // 🔹 **Atualiza a interface**
@@ -168,11 +178,32 @@ public class MainActivity extends AppCompatActivity {
         String dataAtual = obterDataAtual();
 
         if (!ultimaData.equals(dataAtual)) {
-            prefs.edit().putString(ULTIMA_DATA_KEY, dataAtual).apply();
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(ULTIMA_DATA_KEY, dataAtual);
+            editor.putBoolean("META_CONCLUIDA_HOJE", false); // 🔄 Reseta a meta concluída
+
+            boolean lembretesForamAtivados = prefs.getBoolean("LEMBRETES_FORAM_ATIVADOS", false);
+            boolean lembretesDesativadosManual = prefs.getBoolean("LEMBRETES_DESATIVADOS_MANUALMENTE", false);
+
+            if (lembretesForamAtivados) {
+                if (!lembretesDesativadosManual) {
+                    LembretesActivity.reagendarLembretes(this);
+                    Log.d(TAG, "🔄 Novo dia! Lembretes reativados automaticamente.");
+                } else {
+                    Log.d(TAG, "⚠️ Lembretes não foram reativados pois foram desativados manualmente.");
+                }
+            }
+
+            // 🔄 Sempre remover flags para não interferir no próximo dia
+            editor.remove("LEMBRETES_FORAM_ATIVADOS");
+            editor.remove("LEMBRETES_DESATIVADOS_MANUALMENTE");
+            editor.apply();
+
             return true;
         }
         return false;
     }
+
 
     // 🔹 **Reseta o consumo ao iniciar um novo dia**
     private void resetarConsumoDiario() {
