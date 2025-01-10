@@ -9,5 +9,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <TextView
+        android:id="@+id/textoSemHistorico"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nenhum_hist_rico_encontrado"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:padding="16dp" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

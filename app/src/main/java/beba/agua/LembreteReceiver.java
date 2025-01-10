@@ -1,6 +1,5 @@
 package beba.agua;
 
-import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -17,8 +16,7 @@ import androidx.core.app.NotificationManagerCompat;
 public class LembreteReceiver extends BroadcastReceiver {
 
     private static final String TAG = "LembreteReceiver";
-    private static final String CANAL_ID = "canal_lembretes";
-    private static final int NOTIFICACAO_ID = 1;
+    private static final String CHANNEL_ID = "beba_agua_channel";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -26,57 +24,59 @@ public class LembreteReceiver extends BroadcastReceiver {
 
         String mensagem = intent.getStringExtra("mensagem");
         if (mensagem == null || mensagem.isEmpty()) {
-            mensagem = "Hora de beber água!";
+            mensagem = "Hora de beber água! 💧";
         }
 
-        criarCanalNotificacao(context);
+        criarCanalDeNotificacao(context);
+        exibirNotificacao(context, mensagem);
+    }
 
-        Intent intentMainActivity = new Intent(context, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, intentMainActivity, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-        );
+    private void criarCanalDeNotificacao(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CANAL_ID)
-                .setSmallIcon(R.drawable.icon_gota)
-                .setContentTitle("Lembrete de hidratação")
-                .setContentText(mensagem)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true);
+            if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
+                CharSequence nome = "Lembretes de Hidratação";
+                String descricao = "Notificações para lembrar de beber água.";
+                int importancia = NotificationManager.IMPORTANCE_HIGH;
 
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, nome, importancia);
+                channel.setDescription(descricao);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "🚫 Permissão de notificação não concedida! Notificação não será exibida.");
-                return;
+                notificationManager.createNotificationChannel(channel);
+                Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
+            } else {
+                Log.d(TAG, "🔄 Canal de notificação já existente.");
             }
-        }
-
-        try {
-            notificationManager.notify(NOTIFICACAO_ID, builder.build());
-            Log.d(TAG, "✅ Notificação exibida com sucesso.");
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Erro ao exibir a notificação: " + e.getMessage(), e);
         }
     }
 
-    private void criarCanalNotificacao(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence nome = "Lembretes de Hidratação";
-            String descricao = "Canal para notificações de lembretes de água";
-            int importancia = NotificationManager.IMPORTANCE_HIGH; // ALTA prioridade
-
-            NotificationChannel canal = new NotificationChannel(CANAL_ID, nome, importancia);
-            canal.setDescription(descricao);
-
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(canal);
-                Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
-            } else {
-                Log.e(TAG, "❌ Erro ao criar o canal de notificação: NotificationManager é nulo.");
+    private void exibirNotificacao(Context context, String mensagem) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33+
+            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "⚠️ Permissão de notificação não concedida! Notificação bloqueada.");
+                return; // Não exibir notificação sem permissão
             }
         }
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.icon_gota)
+                .setContentTitle("🚰 Hidratação Importante!")
+                .setContentText(mensagem)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(1001, builder.build());
+
+        Log.d(TAG, "✅ Notificação exibida com sucesso.");
     }
 }

@@ -11,4 +11,5 @@
     <string name="a_cada_2_horas">2 horas</string>
     <string name="_30_minutos">30min.</string>
     <string name="a_cada_1_hora"> 1 hora</string>
+    <string name="nenhum_hist_rico_encontrado">Nenhum histórico encontrado.</string>
 </resources>
