@@ -122,53 +122,47 @@ public class LembretesActivity extends AppCompatActivity {
     }
 
     private void agendarLembretes() {
-        int hora, minuto;
+    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+    boolean notificacaoAtivada = prefs.getBoolean(KEY_NOTIFICACAO, true);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            hora = timePicker.getHour();
-            minuto = timePicker.getMinute();
-        } else {
-            hora = timePicker.getCurrentHour();
-            minuto = timePicker.getCurrentMinute();
-        }
-
-        String mensagem = editTextMensagem.getText().toString();
-        int intervaloMinutos = 30; // 🔥 Alterar para 30 minutos
-        long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hora);
-        calendar.set(Calendar.MINUTE, minuto);
-        calendar.set(Calendar.SECOND, 0);
-
-        if (calendar.before(Calendar.getInstance())) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        Intent intent = new Intent(this, LembreteReceiver.class);
-        intent.setAction("beba.agua.LembreteReceiver");
-        intent.putExtra("mensagem", mensagem);
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-
-        // 🔥 Substituindo setRepeating() por setExactAndAllowWhileIdle()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        }
-
-        Log.d("LembretesActivity", "✅ Lembrete AGENDADO para " + hora + ":" + minuto + " com intervalo de " + intervaloMinutos + " minutos.");
-
-        Toast.makeText(this, "Lembrete Agendado!", Toast.LENGTH_SHORT).show();
-        salvarConfiguracoes();
+    if (!notificacaoAtivada) {
+        Log.d(TAG, "❌ Notificações estão desativadas. Nenhum lembrete será agendado.");
+        return;
     }
 
+    String mensagem = prefs.getString(KEY_MENSAGEM, "Hora de beber água!");
+    int radioSelecionado = prefs.getInt(KEY_FREQUENCIA, R.id.radioButton1Hora);
+    int hora = prefs.getInt(KEY_HORA, 8);  // Padrão: 08:00
+    int minuto = prefs.getInt(KEY_MINUTO, 0);
 
+    int intervaloMinutos = (radioSelecionado == R.id.radioButton30Min) ? 30 :
+            (radioSelecionado == R.id.radioButton2Horas) ? 120 : 60;
+
+    Log.d(TAG, "🔄 Agendando lembrete para " + hora + ":" + minuto + " a cada " + intervaloMinutos + " minutos.");
+
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(Calendar.HOUR_OF_DAY, hora);
+    calendar.set(Calendar.MINUTE, minuto);
+    calendar.set(Calendar.SECOND, 0);
+
+    if (calendar.before(Calendar.getInstance())) {
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+    }
+
+    Intent intent = new Intent(this, LembreteReceiver.class);
+    intent.setAction("beba.agua.LembreteReceiver");
+    intent.putExtra("mensagem", mensagem);
+
+    PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+    );
+
+    AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+    long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
+    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), intervaloMillis, pendingIntent);
+
+    Log.d(TAG, "✅ Lembrete agendado com sucesso!");
+}
     private void salvarConfiguracoes() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
