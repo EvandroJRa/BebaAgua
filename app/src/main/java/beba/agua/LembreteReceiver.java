@@ -1,64 +1,57 @@
-package beba.agua;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import android.Manifest;
+import android.app.PendingIntent;
 
 public class LembreteReceiver extends BroadcastReceiver {
-
     private static final String TAG = "LembreteReceiver";
-    private static final String CHANNEL_ID = "beba_agua_channel";
+    private static final String CHANNEL_ID = "LEMBRETES_CANAL";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "📢 Lembrete recebido! Tentando exibir notificação...");
 
-        String mensagem = intent.getStringExtra("mensagem");
-        if (mensagem == null || mensagem.isEmpty()) {
-            mensagem = "Hora de beber água! 💧";
-        }
+        if (intent.getAction() != null && intent.getAction().equals("beba.agua.LembreteReceiver")) {
+            String mensagem = intent.getStringExtra("mensagem");
 
-        criarCanalDeNotificacao(context);
-        exibirNotificacao(context, mensagem);
+            // Criar canal antes de exibir a notificação
+            criarCanalDeNotificacao(context);
+            exibirNotificacao(context, mensagem);
+        }
     }
 
     private void criarCanalDeNotificacao(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { // Verifica se o dispositivo está no Android 8.0+
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
+            // Verifica se o canal já existe
             if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
                 CharSequence nome = "Lembretes de Hidratação";
-                String descricao = "Notificações para lembrar de beber água.";
+                String descricao = "Notificações para lembrar você de beber água";
                 int importancia = NotificationManager.IMPORTANCE_HIGH;
 
-                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, nome, importancia);
-                channel.setDescription(descricao);
+                NotificationChannel canal = new NotificationChannel(CHANNEL_ID, nome, importancia);
+                canal.setDescription(descricao);
+                canal.enableVibration(true);
+                canal.enableLights(true);
 
-                notificationManager.createNotificationChannel(channel);
+                notificationManager.createNotificationChannel(canal);
                 Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
             } else {
-                Log.d(TAG, "🔄 Canal de notificação já existente.");
+                Log.d(TAG, "📌 Canal de notificação já existente.");
             }
         }
     }
 
     private void exibirNotificacao(Context context, String mensagem) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33+
-            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Log.w(TAG, "⚠️ Permissão de notificação não concedida! Notificação bloqueada.");
-                return; // Não exibir notificação sem permissão
-            }
-        }
-
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
@@ -75,8 +68,12 @@ public class LembreteReceiver extends BroadcastReceiver {
                 .setContentIntent(pendingIntent);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(1001, builder.build());
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "❌ Permissão de notificação não concedida.");
+            return;
+        }
 
+        notificationManager.notify(1001, builder.build());
         Log.d(TAG, "✅ Notificação exibida com sucesso.");
     }
 }
