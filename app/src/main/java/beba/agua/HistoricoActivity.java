@@ -1,65 +1,63 @@
 package beba.agua;
 
-import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AppCompatActivity;
-import android.widget.TextView;
-import java.util.ArrayList;
 import java.util.List;
+
 
 public class HistoricoActivity extends AppCompatActivity {
 
     private RecyclerView recyclerViewHistorico;
-    private TextView textoSemHistorico;
+    private HistoricoAdapter historicoAdapter;
     private DatabaseHelper dbHelper;
     private static final String TAG = "HistoricoActivity";
+
+    private int offset = 0;
+    private static final int LIMITE_PAGINACAO = 50; // Número de registros por página
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
 
+        // Define Status Bar preta para esta tela
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+        }
+
         recyclerViewHistorico = findViewById(R.id.recyclerViewHistorico);
-        textoSemHistorico = findViewById(R.id.textoSemHistorico);
+        recyclerViewHistorico.setLayoutManager(new LinearLayoutManager(this));
         dbHelper = new DatabaseHelper(this);
 
-        recyclerViewHistorico.setLayoutManager(new LinearLayoutManager(this));
-
-        // Verifica se o banco de dados está vazio e, se estiver, insere dados ficticios
-        if (dbHelper.isBancoVazio()) {
-            dbHelper.inserirDadosFicticios();
-        }
+        // inserede dados para  testar
+//        if (dbHelper.isBancoVazio()) { //Insere dados apenas se o banco estiver vazio
+//            dbHelper.inserirDadosFicticios();
+//        }
 
         carregarHistorico();
     }
 
     private void carregarHistorico() {
-        Cursor cursor = dbHelper.obterHistorico();
+        List<HistoricoModel> historicoList = dbHelper.obterHistoricoPaginado(offset, LIMITE_PAGINACAO);
 
-        if (cursor != null && cursor.getCount() > 0) {
-            List<HistoricoModel> historicoList = new ArrayList<>();
-
-            while (cursor.moveToNext()) {
-                String data = cursor.getString(cursor.getColumnIndexOrThrow("data"));
-                double quantidade = cursor.getDouble(cursor.getColumnIndexOrThrow("quantidade"));
-                double metaDiaria = cursor.getDouble(cursor.getColumnIndexOrThrow("metaDiaria"));
-                historicoList.add(new HistoricoModel(data, quantidade, metaDiaria));
+        if (!historicoList.isEmpty()) {
+            if (historicoAdapter == null) {
+                historicoAdapter = new HistoricoAdapter(historicoList);
+                recyclerViewHistorico.setAdapter(historicoAdapter);
+            } else {
+                historicoAdapter.adicionarRegistros(historicoList); // Método para adicionar mais registros ao adapter
             }
-            cursor.close();
-
-            HistoricoAdapter adapter = new HistoricoAdapter(this, historicoList);
-            recyclerViewHistorico.setAdapter(adapter);
-            textoSemHistorico.setVisibility(TextView.GONE);
             Log.d(TAG, "✅ Histórico carregado com " + historicoList.size() + " registros.");
         } else {
-            textoSemHistorico.setVisibility(TextView.VISIBLE);
-            recyclerViewHistorico.setAdapter(null);
             Log.d(TAG, "⚠️ Nenhum histórico encontrado.");
         }
     }
 }
+
 
 

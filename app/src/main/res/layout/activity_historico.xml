@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/branco">
+    android:background="@color/black">
 
     <!-- Título -->
     <TextView
@@ -13,8 +13,8 @@
         android:layout_height="wrap_content"
         android:text="Histórico de Consumo"
         android:textSize="22sp"
-        android:textColor="@color/azul_escuro"
-        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:fontFamily="@font/poppins_bold"
         android:layout_gravity="center_horizontal"
         android:paddingBottom="10dp"/>
 
@@ -25,7 +25,8 @@
         android:layout_height="wrap_content"
         android:text="Nenhum registro encontrado."
         android:textSize="16sp"
-        android:textColor="@color/cinza"
+        android:textColor="@color/cinza_escuro"
+        android:fontFamily="@font/poppins_regular"
         android:layout_gravity="center"
         android:visibility="gone"
         android:paddingTop="20dp"/>
@@ -34,7 +35,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistorico"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:scrollbars="vertical"
         android:clipToPadding="false"

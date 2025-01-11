@@ -18,6 +18,8 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +45,10 @@ public class LembretesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lembretes);
 
+        // Define Status Bar preta para esta tela
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
+        }
         inicializarComponentes();
         carregarConfiguracoes();
         configurarListeners();
@@ -51,7 +57,6 @@ public class LembretesActivity extends AppCompatActivity {
         verificarPermissaoAlarme();
         solicitarPermissaoAlarmesExatos();
         obterFrequenciaSelecionada();
-
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
     }
@@ -119,7 +124,6 @@ public class LembretesActivity extends AppCompatActivity {
             }
         }
     }
-
     private void inicializarComponentes() {
         timePicker = findViewById(R.id.timePicker);
         radioGroupFrequencia = findViewById(R.id.radioGroupFrequencia);

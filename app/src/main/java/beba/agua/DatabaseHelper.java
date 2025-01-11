@@ -57,7 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // 🔹 Verifica se um registro para a data já existe
+    // Verifica se um registro para a data já existe
     public boolean verificarRegistroExistente(String data) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_HISTORICO + " WHERE " + COLUMN_DATA + " = ?", new String[]{data});
@@ -69,7 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return existe;
     }
 
-    // 🔹 Registra ou Atualiza o Consumo Diário (agora somando corretamente)
+    // Registra ou Atualiza o Consumo Diário (agora somando corretamente)
     public void registrarConsumo(String data, double quantidade, double metaDiaria) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -96,13 +96,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // 🔹 Obtém o histórico de consumo ordenado por data
+    // Obtém o histórico de consumo ordenado por data
     public Cursor obterHistorico() {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT _id, data, IFNULL(quantidade, 0) AS quantidade, IFNULL(metaDiaria, 2000) AS metaDiaria FROM " + TABLE_HISTORICO + " ORDER BY data DESC, _id DESC", null);
     }
 
-    // 🔹 Obtém a soma total do consumo diário
+    // Obtém a soma total do consumo diário
     public double obterConsumoDiario(String data) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT SUM(" + COLUMN_QUANTIDADE + ") FROM " + TABLE_HISTORICO + " WHERE " + COLUMN_DATA + " = ?", new String[]{data});
@@ -114,7 +114,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return consumo;
     }
 
-    // 🔹 Obtém a meta diária de um dia específico
+    // Obtém a meta diária de um dia específico
     public double obterMetaDiaria(String data) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT " + COLUMN_META_DIARIA + " FROM " + TABLE_HISTORICO + " WHERE " + COLUMN_DATA + " = ?", new String[]{data});
@@ -126,20 +126,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return meta;
     }
 
-    // 🔹 Deleta um registro específico do histórico
+    // Deleta um registro específico do histórico
     public void deletarRegistro(String data) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_HISTORICO, COLUMN_DATA + " = ?", new String[]{data});
     }
 
-    // 🔹 Deleta todo o histórico
+    // Deleta todo o histórico
     public void limparHistorico() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM " + TABLE_HISTORICO);
         Log.d("DatabaseHelper", "🗑️ Histórico apagado.");
     }
 
-    // 🔹 Verifica se o banco de dados está vazio
+    // Verifica se o banco de dados está vazio
     public boolean isBancoVazio() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_HISTORICO, null);
@@ -148,7 +148,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return isEmpty;
     }
 
-    // 🔹 Obtém histórico paginado (para Scroll Infinito)
+    // Obtém histórico paginado (para Scroll Infinito)
     public List<HistoricoModel> obterHistoricoPaginado(int offset, int limite) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<HistoricoModel> historicoList = new ArrayList<>();
@@ -160,24 +160,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return historicoList;
     }
     // -------------------------------------------------------------------------------//
-    // dados ficticio, para teste
-    public void inserirDadosFicticios() {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        for (int i = 1; i <= 100; i++) { // 🔥 Insere 100 registros de teste
-            String data = "2025-01-" + (i < 10 ? "0" + i : i); // Formato: 2025-01-01, 2025-01-02...
-            double quantidade = 100 + (i * 15); // Simula um consumo variável (ex: 100ml, 115ml...)
-            double metaDiaria = 2000.0; // Mantém a meta fixa
-
-            ContentValues values = new ContentValues();
-            values.put("data", data);
-            values.put("quantidade", quantidade);
-            values.put("metaDiaria", metaDiaria);
-
-            db.insertWithOnConflict("historico", null, values, SQLiteDatabase.CONFLICT_IGNORE);
-        }
-        Log.d("DatabaseHelper", "📊 100 registros de teste foram adicionados ao histórico.");
-    }
+//    // dados ficticio, para teste
+//    public void inserirDadosFicticios() {
+//        SQLiteDatabase db = this.getWritableDatabase();
+//
+//        for (int i = 1; i <= 100; i++) { // 🔥 Insere 100 registros de teste
+//            String data = "2025-01-" + (i < 10 ? "0" + i : i); // Formato: 2025-01-01, 2025-01-02...
+//            double quantidade = 100 + (i * 15); // Simula um consumo variável (ex: 100ml, 115ml...)
+//            double metaDiaria = 2000.0; // Mantém a meta fixa
+//
+//            ContentValues values = new ContentValues();
+//            values.put("data", data);
+//            values.put("quantidade", quantidade);
+//            values.put("metaDiaria", metaDiaria);
+//
+//            db.insertWithOnConflict("historico", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+//        }
+//        Log.d("DatabaseHelper", "📊 100 registros de teste foram adicionados ao histórico.");
+//    }
 
 
 }

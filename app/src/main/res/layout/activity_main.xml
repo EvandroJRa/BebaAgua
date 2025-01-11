@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
     <ImageView
@@ -68,6 +69,8 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
         android:text="Salvar Meta"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/editTextNumber" />
@@ -117,7 +120,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="100 ml" />
+            android:text="100 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
         <Button
             android:id="@+id/botao150ml"
@@ -126,7 +131,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="150 ml" />
+            android:text="150 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
         <Button
             android:id="@+id/botao250ml"
@@ -135,7 +142,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="250 ml" />
+            android:text="250 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
         <Button
             android:id="@+id/botao500ml"
@@ -144,7 +153,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="500 ml" />
+            android:text="500 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
         <Button
             android:id="@+id/botao600ml"
@@ -153,7 +164,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="600 ml" />
+            android:text="600 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
         <Button
             android:id="@+id/botao750ml"
@@ -162,7 +175,9 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="750 ml" />
+            android:text="750 ml"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
 
     </GridLayout>
 
@@ -172,6 +187,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="Configurar Lembretes"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
@@ -184,6 +201,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Histórico de Consumo"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"

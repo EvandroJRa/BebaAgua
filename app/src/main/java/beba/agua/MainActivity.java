@@ -1,8 +1,6 @@
 package beba.agua;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
-import static beba.agua.LembretesActivity.KEY_NOTIFICACAO;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -42,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        // Define Status Bar azul para esta tela
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+        }
+
         dbHelper = new DatabaseHelper(this);
 
         inicializarComponentes();
