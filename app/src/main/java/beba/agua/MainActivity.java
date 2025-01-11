@@ -5,11 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.app.AlarmManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -56,12 +59,12 @@ public class MainActivity extends AppCompatActivity {
         if (isNovoDia()) {
             resetarConsumoDiario();
         }
-
         atualizarInterface();
         solicitarPermissaoNotificacoes();
+        verificarESolicitarPermissaoAlarme();
     }
 
-    // 🔹 **Solicita permissão para notificações no Android 13+**
+    //**Solicita permissão para notificações no Android 13+**
     private void solicitarPermissaoNotificacoes() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -73,8 +76,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    //Verificar permissão
+    private void verificarESolicitarPermissaoAlarme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // API 31+
+            SharedPreferences prefs = getSharedPreferences("ConfigApp", MODE_PRIVATE);
+            boolean jaSolicitou = prefs.getBoolean("PERMISSAO_ALARME_SOLICITADA", false);
 
-    // 🔹 **Inicializa componentes da UI**
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms() && !jaSolicitou) {
+                Log.w("MainActivity", "⚠️ Permissão de alarme exato ainda não concedida! Solicitando...");
+
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+
+                // 🔹 Salva no SharedPreferences que a permissão já foi solicitada
+                prefs.edit().putBoolean("PERMISSAO_ALARME_SOLICITADA", true).apply();
+            } else {
+                Log.d("MainActivity", "✅ Permissão de alarme exato já concedida ou já foi solicitada antes.");
+            }
+        }
+    }
+
+
+    //**Inicializa componentes da UI**
     private void inicializarComponentes() {
         editTextMeta = findViewById(R.id.editTextNumber);
         botaoSalvarMeta = findViewById(R.id.botaoSalvarMeta);
@@ -101,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // 🔹 **Configura eventos de clique**
+    //**Configura eventos de clique**
     private void configurarListeners() {
         botaoSalvarMeta.setOnClickListener(view -> salvarMetaDiaria());
 
@@ -113,11 +138,11 @@ public class MainActivity extends AppCompatActivity {
         botao750ml.setOnClickListener(view -> adicionarConsumo(750));
     }
 
-    // 🔹 **Salva a meta diária no SharedPreferences**
+    //**Salva a meta diária no SharedPreferences**
     private void salvarMetaDiaria() {
         String metaString = editTextMeta.getText().toString();
         if (metaString.isEmpty()) {
-            Toast.makeText(this, "Insira uma meta diária", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Insira uma meta diária ex: 2000ml = 2L", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -136,21 +161,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 🔹 **Carrega a meta e consumo atual do SharedPreferences**
+    // **Carrega a meta e consumo atual do SharedPreferences**
     private void carregarMetaDiaria() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         metaDiaria = prefs.getFloat(META_DIARIA_KEY, 2000.0f);
         consumoAtual = prefs.getFloat(CONSUMO_ATUAL_KEY, 0.0f);
     }
 
-    // 🔹 **Adiciona o consumo de água**
+    // **Adiciona o consumo de água**
     private void adicionarConsumo(double quantidade) {
         String dataAtual = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
-        // 🔄 Atualiza no banco de dados
+        // Atualiza no banco de dados
         dbHelper.registrarConsumo(dataAtual, quantidade, metaDiaria);
 
-        // 🔄 Atualiza a interface
+        // Atualiza a interface
         consumoAtual += quantidade;
         SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
         editor.putFloat(CONSUMO_ATUAL_KEY, (float) consumoAtual);
@@ -158,9 +183,8 @@ public class MainActivity extends AppCompatActivity {
         if (consumoAtual >= metaDiaria) {
             Toast.makeText(this, "🎉 Parabéns! Meta concluída!", Toast.LENGTH_LONG).show();
             desativarBotoesConsumo(); // 🔥 Desativa os botões de consumo
-            editor.putBoolean("META_CONCLUIDA_HOJE", true); // ✅ Salva que a meta foi concluída hoje
-            editor.putBoolean("META_CONCLUIDA_ONTEM", true); // 🔄 Para ser usada no próximo dia
-            LembretesActivity.cancelarLembretes(this); // ❌ Desativa os lembretes
+            editor.putBoolean("META_CONCLUIDA_HOJE", true); // Salva que a meta foi concluída hoje
+            editor.putBoolean("META_CONCLUIDA_ONTEM", true); // Para ser usada no próximo dia
             Log.d(TAG, "🎯 Meta concluída! Lembretes desativados.");
         }
 
@@ -168,14 +192,14 @@ public class MainActivity extends AppCompatActivity {
         atualizarInterface();
     }
 
-    // 🔹 **Atualiza a interface**
+    // **Atualiza a interface**
     private void atualizarInterface() {
         textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
         int progresso = (int) ((consumoAtual / metaDiaria) * 100);
         barraProgresso.setProgress(metaDiaria > 0 ? progresso : 0);
     }
 
-    // 🔹 **Verifica se é um novo dia**
+    //**Verifica se é um novo dia**
     private boolean isNovoDia() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String ultimaData = prefs.getString(ULTIMA_DATA_KEY, "");
@@ -184,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
         if (!ultimaData.equals(dataAtual)) {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(ULTIMA_DATA_KEY, dataAtual);
-            editor.putBoolean("META_CONCLUIDA_HOJE", false); // 🔄 Reseta a meta concluída
+            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Reseta a meta concluída
 
             boolean lembretesForamAtivados = prefs.getBoolean("LEMBRETES_FORAM_ATIVADOS", false);
             boolean lembretesDesativadosManual = prefs.getBoolean("LEMBRETES_DESATIVADOS_MANUALMENTE", false);
@@ -208,8 +232,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-
-    // 🔹 **Reseta o consumo ao iniciar um novo dia**
+    // **Reseta o consumo ao iniciar um novo dia**
     private void resetarConsumoDiario() {
         consumoAtual = 0;
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()

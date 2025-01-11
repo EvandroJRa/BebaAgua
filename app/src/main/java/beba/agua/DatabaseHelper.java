@@ -20,6 +20,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_DATA = "data";
     private static final String COLUMN_QUANTIDADE = "quantidade";
     private static final String COLUMN_META_DIARIA = "metaDiaria";
+    private LembretesListener lembretesListener;
 
     private static final String CREATE_TABLE_HISTORICO = "CREATE TABLE IF NOT EXISTS " + TABLE_HISTORICO + " (" +
             COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -29,6 +30,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    public interface LembretesListener {
+        void verificarEAtualizarLembretes();
+    }
+    public void setLembretesListener(LembretesListener listener) {
+        this.lembretesListener = listener;
     }
 
     @Override
@@ -82,11 +90,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             cursor.close();
 
-            double novoTotal = consumoAtual + quantidade;
+            double novoTotal = consumoAtual + quantidade; // 🔥 SOMA ao invés de substituir
             values.put(COLUMN_QUANTIDADE, novoTotal);
 
             db.update(TABLE_HISTORICO, values, COLUMN_DATA + " = ?", new String[]{data});
             Log.d("DatabaseHelper", "🔄 Consumo atualizado: " + novoTotal + "ml para " + data);
+
+            // 🔥 Chama o listener para verificar lembretes quando a meta for atingida
+            if (lembretesListener != null && novoTotal >= metaDiaria) {
+                lembretesListener.verificarEAtualizarLembretes();
+            }
+
         } else {
             values.put(COLUMN_DATA, data);
             values.put(COLUMN_QUANTIDADE, quantidade);

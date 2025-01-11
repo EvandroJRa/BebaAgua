@@ -45,6 +45,16 @@
             android:textSize="12sp"
             android:layout_marginTop="2dp"/>
 
+        <!-- Ícone de meta atingida -->
+        <ImageView
+            android:id="@+id/iconeMetaAtingida"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_meta_atingida"
+            android:contentDescription="Ícone de status da meta"/>
+
         <!-- Barra de progresso -->
         <ProgressBar
             android:id="@+id/progressoConsumo"
@@ -56,15 +66,7 @@
             android:progressDrawable="@drawable/progresso_personalizado"
             android:layout_marginTop="8dp"/>
 
-        <!-- Ícone de meta atingida -->
-        <ImageView
-            android:id="@+id/iconeMetaAtingida"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="8dp"
-            android:visibility="gone"
-            android:src="@drawable/ic_meta_atingida"
-            android:contentDescription="Ícone de status da meta"/>
+
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
