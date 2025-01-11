@@ -5,8 +5,10 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
@@ -16,6 +18,8 @@ import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +32,6 @@ public class LembretesActivity extends AppCompatActivity {
     private RadioGroup radioGroupFrequencia;
     private EditText editTextMensagem;
     private Switch switchLembrete;
-    private ImageButton botaoConfigurarNotificacoes;
     private Button botaoSalvarLembretes;
 
     private static final String PREFS_NAME = "LembreteConfig";
@@ -46,18 +49,76 @@ public class LembretesActivity extends AppCompatActivity {
         inicializarComponentes();
         carregarConfiguracoes();
         configurarListeners();
-        solicitarPermissaoAlarmes();
+        salvarConfiguracoes();
+        solicitarPermissaoAlarme();
+        verificarPermissaoAlarme();
+        solicitarPermissaoAlarmesExatos();
+        obterFrequenciaSelecionada();
+
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
     }
 
-    //solicitar permissão
-    private void solicitarPermissaoAlarmes() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+    // 🔹 Solicita permissão para alarmes exatos
+    private void solicitarPermissaoAlarme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // API 31+
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.w(TAG, "⚠️ Permissão de alarme exato não concedida! Abrindo configurações...");
+
+                // Verifica se já foi solicitado antes para evitar múltiplos prompts
+                SharedPreferences prefs = getSharedPreferences("ConfigApp", MODE_PRIVATE);
+                boolean jaSolicitou = prefs.getBoolean("PERMISSAO_ALARME_SOLICITADA", false);
+
+                if (!jaSolicitou) {
+                    // Abre a tela de configurações do aplicativo
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+
+                    // Salva que já solicitamos a permissão para não perguntar novamente
+                    prefs.edit().putBoolean("PERMISSAO_ALARME_SOLICITADA", true).apply();
+
+                    Toast.makeText(this, "Ative a permissão de Alarmes e Lembretes nas configurações do app.", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Log.d(TAG, "✅ Permissão de alarme exato já concedida.");
+            }
+        }
+    }
+    // 🔹 **Solicita permissão para alarmes exatos no Android 12+ (API 31+)**
+    private void solicitarPermissaoAlarmesExatos() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // API 31+
             AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
             if (!alarmManager.canScheduleExactAlarms()) {
                 Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 startActivity(intent);
+                Log.w(TAG, "⚠️ Solicitando permissão para agendar alarmes exatos.");
+            } else {
+                Log.d(TAG, "✅ Permissão para alarmes exatos já concedida.");
+            }
+        }
+    }
+
+    // 🔹 Verifica se a permissão foi concedida
+    private void verificarPermissaoAlarme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.e(TAG, "❌ Permissão SCHEDULE_EXACT_ALARM ainda não foi concedida!");
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Permissão Necessária")
+                        .setMessage("Para que os lembretes funcionem corretamente, ative a permissão de alarme exato nas configurações do sistema.")
+                        .setPositiveButton("Abrir Configurações", (dialog, which) -> {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+            } else {
+                Log.d(TAG, "✅ Permissão SCHEDULE_EXACT_ALARM concedida.");
             }
         }
     }
@@ -68,34 +129,37 @@ public class LembretesActivity extends AppCompatActivity {
         editTextMensagem = findViewById(R.id.editTextMensagem);
         switchLembrete = findViewById(R.id.switch1lembete);
         botaoSalvarLembretes = findViewById(R.id.botaoSalvarLembretes);
-        botaoConfigurarNotificacoes = findViewById(R.id.botaoConfigurarNotificacoes);
 
         timePicker.setIs24HourView(true);
     }
 
     private void configurarListeners() {
         botaoSalvarLembretes.setOnClickListener(view -> {
+            Log.d(TAG, "💾 Botão SALVAR pressionado!");
+
             if (switchLembrete.isChecked()) {
+                cancelarNotificacoes(); // Evita alarmes duplicados
                 agendarLembretes();
+                Toast.makeText(this, "Lembretes configurados com sucesso!", Toast.LENGTH_SHORT).show();
             } else {
                 cancelarNotificacoes();
+                Toast.makeText(this, "Lembretes desativados!", Toast.LENGTH_SHORT).show();
             }
         });
-
-        botaoConfigurarNotificacoes.setOnClickListener(view -> abrirConfiguracoesNotificacoes());
 
         switchLembrete.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (!isChecked) {
+                Log.d(TAG, "🔕 Lembretes DESATIVADOS pelo usuário.");
                 cancelarNotificacoes();
+            } else {
+                Log.d(TAG, "🔔 Lembretes ATIVADOS pelo usuário.");
             }
         });
-    }
 
-    private void abrirConfiguracoesNotificacoes() {
-        Intent intent = new Intent();
-        intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-        intent.putExtra("android.provider.extra.APP_PACKAGE", getPackageName());
-        startActivity(intent);
+        radioGroupFrequencia.setOnCheckedChangeListener((group, checkedId) -> {
+            int frequencia = obterFrequenciaSelecionada();
+            Log.d(TAG, "⏰ Frequência do lembrete alterada para " + frequencia + " minutos.");
+        });
     }
 
     private void carregarConfiguracoes() {
@@ -122,19 +186,19 @@ public class LembretesActivity extends AppCompatActivity {
     }
 
     private void agendarLembretes() {
-        int hora, minuto;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            hora = timePicker.getHour();
-            minuto = timePicker.getMinute();
-        } else {
-            hora = timePicker.getCurrentHour();
-            minuto = timePicker.getCurrentMinute();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.e(TAG, "❌ ERRO: Permissão de alarme exato não concedida! Alarme não será agendado.");
+                return;
+            }
         }
 
-        String mensagem = editTextMensagem.getText().toString();
-        int intervaloMinutos = 30; // 🔥 Alterar para 30 minutos
+        int hora = timePicker.getHour();
+        int minuto = timePicker.getMinute();
+        int intervaloMinutos = obterFrequenciaSelecionada();
         long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
+        String mensagem = editTextMensagem.getText().toString();
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hora);
@@ -154,18 +218,14 @@ public class LembretesActivity extends AppCompatActivity {
         );
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                intervaloMillis,
+                pendingIntent);
 
-        // 🔥 Substituindo setRepeating() por setExactAndAllowWhileIdle()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        }
+        salvarConfiguracoes(); // Salvar SOMENTE após sucesso no agendamento
 
-        Log.d("LembretesActivity", "✅ Lembrete AGENDADO para " + hora + ":" + minuto + " com intervalo de " + intervaloMinutos + " minutos.");
-
-        Toast.makeText(this, "Lembrete Agendado!", Toast.LENGTH_SHORT).show();
-        salvarConfiguracoes();
+        Log.d(TAG, "✅ Lembrete AGENDADO para " + hora + ":" + minuto + " e será repetido a cada " + intervaloMinutos + " minutos.");
     }
 
 
@@ -176,30 +236,24 @@ public class LembretesActivity extends AppCompatActivity {
         editor.putString(KEY_MENSAGEM, editTextMensagem.getText().toString());
         editor.putBoolean(KEY_NOTIFICACAO, switchLembrete.isChecked());
         editor.putInt(KEY_FREQUENCIA, radioGroupFrequencia.getCheckedRadioButtonId());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            editor.putInt(KEY_HORA, timePicker.getHour());
-            editor.putInt(KEY_MINUTO, timePicker.getMinute());
-        } else {
-            editor.putInt(KEY_HORA, timePicker.getCurrentHour());
-            editor.putInt(KEY_MINUTO, timePicker.getCurrentMinute());
-        }
+        editor.putInt(KEY_HORA, timePicker.getHour());
+        editor.putInt(KEY_MINUTO, timePicker.getMinute());
 
         editor.apply();
-        Log.d(TAG, "💾 Configurações salvas.");
+        Log.d(TAG, "💾 Configurações salvas com sucesso.");
     }
 
     private int obterFrequenciaSelecionada() {
         int radioSelecionado = radioGroupFrequencia.getCheckedRadioButtonId();
         if (radioSelecionado == R.id.radioButton30Min) return 30;
         else if (radioSelecionado == R.id.radioButton2Horas) return 120;
-        else return 60;
+        else return 60; // Padrão: 1 hora
     }
+
     //Cancelar Notificação
     private void cancelarNotificacoes() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManager.cancel(PendingIntent.getBroadcast(this, 0, new Intent(this, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE));
-        Toast.makeText(this, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "❌ Lembretes cancelados.");
     }
 
@@ -220,6 +274,7 @@ public class LembretesActivity extends AppCompatActivity {
 
         prefs.edit().putBoolean(KEY_NOTIFICACAO, false).apply(); // 🔹 Atualiza estado no SharedPreferences
         Log.d(TAG, "❌ Lembretes foram cancelados pelo sistema.");
+        Toast.makeText(context, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -264,6 +319,8 @@ public class LembretesActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+
+            Log.d(TAG, "🕒 Lembrete realmente AGENDADO para: " + calendar.getTime());
         } else {
             alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
