@@ -11,11 +11,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
-
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
@@ -28,8 +26,7 @@ public class LembreteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "🚀 LembreteReceiver foi acionado!");
-        Log.d(TAG, "📢 Lembrete recebido! Exibindo notificação...");
+        Log.d(TAG, "🚀 LembreteReceiver acionado! Verificando notificação...");
 
         String mensagem = intent.getStringExtra("mensagem");
         if (mensagem == null || mensagem.isEmpty()) {
@@ -39,7 +36,7 @@ public class LembreteReceiver extends BroadcastReceiver {
         criarCanalDeNotificacao(context);
         exibirNotificacao(context, mensagem);
 
-        // ✅ Agendar próxima execução do alarme para repetir conforme a frequência definida
+        // ✅ Agora reagenda corretamente
         reagendarLembrete(context);
     }
 
@@ -48,17 +45,13 @@ public class LembreteReceiver extends BroadcastReceiver {
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
 
             if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
-                CharSequence nome = "Lembretes de Hidratação";
-                String descricao = "Notificações para lembrar de beber água.";
-                int importancia = NotificationManager.IMPORTANCE_HIGH;
-
-                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, nome, importancia);
-                channel.setDescription(descricao);
-
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Lembretes de Hidratação",
+                        NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("Notificações para lembrar de beber água.");
                 notificationManager.createNotificationChannel(channel);
-                Log.d(TAG, "✅ Canal de notificação criado com sucesso.");
+                Log.d(TAG, "✅ Canal de notificação criado.");
             } else {
-                Log.d(TAG, "🔄 Canal de notificação já existente.");
+                Log.d(TAG, "🔄 Canal de notificação já existe.");
             }
         }
     }
@@ -67,7 +60,7 @@ public class LembreteReceiver extends BroadcastReceiver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33+
             if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 Log.w(TAG, "⚠️ Permissão de notificação não concedida! Notificação bloqueada.");
-                return; // Não exibir notificação sem permissão
+                return; // Evita exibir notificação sem permissão
             }
         }
 
@@ -89,40 +82,32 @@ public class LembreteReceiver extends BroadcastReceiver {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         notificationManager.notify(1001, builder.build());
 
-        Log.d(TAG, "✅ Notificação exibida com sucesso.");
+        Log.d(TAG, "✅ Notificação exibida.");
     }
 
     private void reagendarLembrete(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        int radioSelecionado = prefs.getInt(KEY_FREQUENCIA, R.id.radioButton1Hora); // Frequência padrão: 1 hora
+        int radioSelecionado = prefs.getInt(KEY_FREQUENCIA, R.id.radioButton1Hora);
 
         int intervaloMinutos = (radioSelecionado == R.id.radioButton30Min) ? 30 :
-                (radioSelecionado == R.id.radioButton2Horas) ? 120 : 60; // 1h padrão
-
-        long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
-
-        Log.d(TAG, "🔄 Reagendando lembrete para daqui a " + intervaloMinutos + " minutos.");
+                (radioSelecionado == R.id.radioButton2Horas) ? 120 : 60;
 
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, intervaloMinutos);
+
+        Log.d(TAG, "🔄 Reagendando lembrete para daqui a " + intervaloMinutos + " minutos.");
 
         Intent intent = new Intent(context, LembreteReceiver.class);
         intent.setAction("beba.agua.LembreteReceiver");
         intent.putExtra("mensagem", "Hora de beber água! 💧");
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                context, 1, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-            Log.d(TAG, "🕒 Novo lembrete agendado para: " + calendar.getTime());
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        }
-
-        Log.d(TAG, "✅ Lembrete reagendado com sucesso!");
+        Log.d(TAG, "✅ Novo lembrete agendado para " + calendar.getTime());
     }
 }
