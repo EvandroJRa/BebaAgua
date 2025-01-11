@@ -8,6 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "bebaagua.db";
@@ -154,4 +157,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return isEmpty;
     }
+
+    public List<HistoricoModel> obterHistoricoPaginado(int offset, int limite) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<HistoricoModel> historicoList = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery("SELECT data, quantidade, metaDiaria FROM historico ORDER BY data DESC LIMIT ? OFFSET ?",
+                new String[]{String.valueOf(limite), String.valueOf(offset)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String data = cursor.getString(0);
+                double quantidade = cursor.getDouble(1);
+                double metaDiaria = cursor.getDouble(2);
+                historicoList.add(new HistoricoModel(data, quantidade, metaDiaria));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return historicoList;
+    }
+    // -------------------------------------------------------------------------------//
+    // dados ficticio, para teste
+    public void inserirDadosFicticios() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        for (int i = 1; i <= 50; i++) { // 🔥 Insere 50 registros de teste
+            String data = "2025-01-" + (i < 10 ? "0" + i : i); // Formato: 2025-01-01, 2025-01-02...
+            double quantidade = 150 + (i * 10); // Simula um consumo variável
+            double metaDiaria = 2000.0; // Mantém a meta fixa
+
+            ContentValues values = new ContentValues();
+            values.put("data", data);
+            values.put("quantidade", quantidade);
+            values.put("metaDiaria", metaDiaria);
+
+            db.insertWithOnConflict("historico", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        }
+        Log.d("DatabaseHelper", "📊 50 registros de teste foram adicionados ao histórico.");
+    }
+
 }

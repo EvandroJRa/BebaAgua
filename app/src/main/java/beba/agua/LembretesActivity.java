@@ -8,17 +8,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.Calendar;
@@ -138,8 +135,7 @@ public class LembretesActivity extends AppCompatActivity {
             Log.d(TAG, "💾 Botão SALVAR pressionado!");
 
             if (switchLembrete.isChecked()) {
-                cancelarNotificacoes(); // Evita alarmes duplicados
-                agendarLembretes();
+                agendarLembretes(); // 🔥 Agora não cancela antes!
                 Toast.makeText(this, "Lembretes configurados com sucesso!", Toast.LENGTH_SHORT).show();
             } else {
                 cancelarNotificacoes();
@@ -250,33 +246,6 @@ public class LembretesActivity extends AppCompatActivity {
         else return 60; // Padrão: 1 hora
     }
 
-    //Cancelar Notificação
-    private void cancelarNotificacoes() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.cancel(PendingIntent.getBroadcast(this, 0, new Intent(this, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE));
-        Log.d(TAG, "❌ Lembretes cancelados.");
-    }
-
-    //Cancelar Lembretes
-    public static void cancelarLembretes(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean lembretesAtivados = prefs.getBoolean(KEY_NOTIFICACAO, true); // 🔹 Verifica se estavam ativos
-
-        if (lembretesAtivados) { // 🔥 Apenas salva se estavam ativados antes de cancelar
-            prefs.edit().putBoolean("LEMBRETES_FORAM_ATIVADOS", true).apply();
-        }
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context, 0, new Intent(context, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE);
-
-        alarmManager.cancel(pendingIntent);
-
-        prefs.edit().putBoolean(KEY_NOTIFICACAO, false).apply(); // 🔹 Atualiza estado no SharedPreferences
-        Log.d(TAG, "❌ Lembretes foram cancelados pelo sistema.");
-        Toast.makeText(context, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
-    }
-
 
     public static void reagendarLembretes(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -327,4 +296,40 @@ public class LembretesActivity extends AppCompatActivity {
 
         Log.d(TAG, "✅ Lembrete reagendado com sucesso!");
     }
+
+    //Cancelar Lembretes
+    public static void cancelarLembretes(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean lembretesAtivados = prefs.getBoolean(KEY_NOTIFICACAO, true); // 🔹 Verifica se estavam ativos
+
+        if (lembretesAtivados) { // 🔥 Apenas salva se estavam ativados antes de cancelar
+            prefs.edit().putBoolean("LEMBRETES_FORAM_ATIVADOS", true).apply();
+        }
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 0, new Intent(context, LembreteReceiver.class), PendingIntent.FLAG_IMMUTABLE);
+
+        alarmManager.cancel(pendingIntent);
+
+        prefs.edit().putBoolean(KEY_NOTIFICACAO, false).apply(); // 🔹 Atualiza estado no SharedPreferences
+        Log.d(TAG, "❌ Lembretes foram cancelados pelo sistema.");
+        Toast.makeText(context, "Lembretes Desativados", Toast.LENGTH_SHORT).show();
+    }
+
+    //Cancelar Notificação
+    private void cancelarNotificacoes() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, new Intent(this, LembreteReceiver.class), PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent);
+            Log.d(TAG, "❌ Lembretes cancelados.");
+        } else {
+            Log.d(TAG, "⚠️ Nenhum lembrete ativo para cancelar.");
+        }
+    }
+
 }

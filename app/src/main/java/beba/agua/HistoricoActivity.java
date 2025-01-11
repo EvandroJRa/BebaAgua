@@ -1,69 +1,67 @@
 package beba.agua;
 
-import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HistoricoActivity extends AppCompatActivity {
 
-    private ListView listViewHistorico;
-    private TextView textoSemHistorico;
+    private RecyclerView recyclerViewHistorico;
+    private HistoricoAdapter adapter;
     private DatabaseHelper dbHelper;
+    private List<HistoricoModel> historicoList;
     private static final String TAG = "HistoricoActivity";
+
+    private boolean isLoading = false;
+    private int offset = 0;
+    private static final int LIMITE_PAGINA = 10; // 🔹 Carregar 10 registros por vez
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
 
-        listViewHistorico = findViewById(R.id.listViewHistorico);
-        textoSemHistorico = findViewById(R.id.textoSemHistorico);
+        recyclerViewHistorico = findViewById(R.id.recyclerViewHistorico);
         dbHelper = new DatabaseHelper(this);
 
-        carregarHistorico();
+        historicoList = new ArrayList<>();
+        adapter = new HistoricoAdapter(historicoList);
+        recyclerViewHistorico.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewHistorico.setAdapter(adapter);
+
+        carregarMaisHistorico(); // 🔹 Carrega os primeiros registros
+        dbHelper.inserirDadosFicticios(); //dados para teste
+
+        recyclerViewHistorico.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (!isLoading && layoutManager != null && layoutManager.findLastCompletelyVisibleItemPosition() == historicoList.size() - 1) {
+                    carregarMaisHistorico();
+                }
+            }
+        });
     }
 
-    private void carregarHistorico() {
-        Cursor cursor = dbHelper.obterHistorico();
+    private void carregarMaisHistorico() {
+        isLoading = true;
 
-        if (cursor != null && cursor.getCount() > 0) {
-            String[] from = new String[]{"data", "quantidade", "metaDiaria"};
-            int[] to = new int[]{R.id.textoData, R.id.textoQuantidade, R.id.textoMeta};
-
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                    this, R.layout.item_historico, cursor, from, to, 0
-            ) {
-                @Override
-                public void setViewText(TextView v, String text) {
-                    try {
-                        // 🎯 Obtém o índice da coluna diretamente pelo nome
-                        if (v.getId() == R.id.textoQuantidade) {
-                            double quantidade = cursor.getDouble(cursor.getColumnIndexOrThrow("quantidade"));
-                            text = String.format("%.0f ml", quantidade);
-                        } else if (v.getId() == R.id.textoMeta) {
-                            double metaDiaria = cursor.getDouble(cursor.getColumnIndexOrThrow("metaDiaria"));
-                            text = String.format("%.0f ml", metaDiaria);
-                        }
-
-                        super.setViewText(v, text);
-                    } catch (Exception e) {
-                        Log.e(TAG, "❌ Erro ao formatar valor: " + e.getMessage());
-                        v.setText("0 ml");
-                    }
-                }
-            };
-
-            listViewHistorico.setAdapter(adapter);
-            textoSemHistorico.setVisibility(TextView.GONE);
-            Log.d(TAG, "✅ Histórico carregado com " + cursor.getCount() + " registros.");
+        List<HistoricoModel> novosRegistros = dbHelper.obterHistoricoPaginado(offset, LIMITE_PAGINA);
+        if (!novosRegistros.isEmpty()) {
+            historicoList.addAll(novosRegistros);
+            adapter.adicionarRegistros(novosRegistros);
+            offset += novosRegistros.size();
         } else {
-            textoSemHistorico.setVisibility(TextView.VISIBLE);
-            listViewHistorico.setAdapter(null);
-            Log.d(TAG, "⚠️ Nenhum histórico encontrado.");
+            Log.d(TAG, "🚫 Nenhum novo registro encontrado.");
         }
+
+        isLoading = false;
     }
 }

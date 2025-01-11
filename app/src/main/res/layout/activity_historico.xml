@@ -4,10 +4,12 @@
     android:layout_height="match_parent">
 
 
-    <ListView
-        android:id="@+id/listViewHistorico"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewHistorico"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"/>
+
 
     <TextView
         android:id="@+id/textoSemHistorico"
