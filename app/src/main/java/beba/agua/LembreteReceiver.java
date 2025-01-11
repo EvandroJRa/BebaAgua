@@ -72,7 +72,7 @@ public class LembreteReceiver extends BroadcastReceiver {
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.icon_gota)
+                //.setSmallIcon(R.drawable.icon_gota)
                 .setContentTitle("🚰 Hidratação Importante!")
                 .setContentText(mensagem)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

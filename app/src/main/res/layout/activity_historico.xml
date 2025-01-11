@@ -1,26 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/branco">
 
+    <!-- Título -->
+    <TextView
+        android:id="@+id/tituloHistorico"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Histórico de Consumo"
+        android:textSize="22sp"
+        android:textColor="@color/azul_escuro"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="10dp"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewHistorico"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"/>
-
-
+    <!-- Texto quando não houver histórico -->
     <TextView
         android:id="@+id/textoSemHistorico"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/nenhum_hist_rico_encontrado"
+        android:text="Nenhum registro encontrado."
         android:textSize="16sp"
-        android:textStyle="bold"
-        android:visibility="gone"
+        android:textColor="@color/cinza"
         android:layout_gravity="center"
-        android:padding="16dp" />
+        android:visibility="gone"
+        android:paddingTop="20dp"/>
 
+    <!-- RecyclerView para listar os registros -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewHistorico"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

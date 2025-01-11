@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Paleta Personalizada do App -->
+    <color name="azul_escuro">#003366</color> <!-- azul escuro -->
+    <color name="cinza">#333337</color> <!-- cinza -->
+    <color name="branco">#FFFFFF</color> <!-- branco -->
+    <color name="azul_medio">#304F62</color> <!-- azul escuro -->
+    <color name="fundo_app">#F5F5F5</color> <!-- Fundo suave -->
+    <color name="cor_card">#2196F3</color> <!-- Azul vibrante -->
 </resources>

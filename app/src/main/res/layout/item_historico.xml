@@ -1,37 +1,85 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp"
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="16dp">
 
+        <!-- Data do Registro -->
         <TextView
             android:id="@+id/textoData"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Data: 10/01/2025"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:text="10 Jan 2025"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/azul_escuro"/>
 
-        <TextView
-            android:id="@+id/textoQuantidade"
-            android:layout_width="wrap_content"
+        <!-- Consumo e Meta -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Água Consumida: 1500 ml"
-            android:textSize="16sp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
 
-        <TextView
-            android:id="@+id/textoMeta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Meta Diária: 2000 ml"
-            android:textSize="16sp" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/icon_gota"/>
 
+            <TextView
+                android:id="@+id/textoQuantidade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="500 ml"
+                android:textSize="18sp"
+                android:textColor="@color/azul_medio"
+                android:layout_marginStart="8dp"/>
+
+            <TextView
+                android:text="/"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_marginStart="8dp"/>
+
+            <TextView
+                android:id="@+id/textoMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2000 ml"
+                android:textSize="18sp"
+                android:textColor="@color/azul_medio"
+                android:layout_marginStart="8dp"/>
+
+            <ImageView
+                android:id="@+id/iconeMetaAtingida"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_concluido"
+                android:visibility="gone"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <!-- Barra de Progresso -->
+        <ProgressBar
+            android:id="@+id/progressoConsumo"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:progress="37"
+            android:max="100"
+            android:progressDrawable="@drawable/custom_progress_bar"
+            android:layout_marginTop="8dp"/>
     </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
