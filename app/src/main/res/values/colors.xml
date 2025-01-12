@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- minimalista -->
+    <color name="azul_escuro">#004080</color>
+    <color name="azul_claro">#007ACC</color>
+    <color name="amarelo">#FFD700</color>
+    <color name="cinza_escuro">#333333</color>
+    <color name="cinza_medio">#666666</color>
+    <color name="cinza_claro">#DDDDDD</color>
+
 </resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/textoTitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gire a Roleta e Receba uma Dica!"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="16dp"/>
+
+    <ImageView
+        android:id="@+id/imageRoleta"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:src="@drawable/roleta"
+        android:contentDescription="Roleta de Dicas"/>
+
+    <Button
+        android:id="@+id/botaoGirar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Girar Roleta"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/textoDica"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sua dica aparecerá aqui!"
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:gravity="center"
+        android:paddingTop="20dp"/>
+</LinearLayout>

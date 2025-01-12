@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextoDestaque">
+        <item name="android:fontFamily">@font/poppins</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/azul_escuro</item>
+    </style>
+
+</resources>
