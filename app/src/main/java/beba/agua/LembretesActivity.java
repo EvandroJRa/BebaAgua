@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -47,14 +48,21 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
     private static final String KEY_META_CONCLUIDA = "META_CONCLUIDA";
     private static final String KEY_ULTIMA_DATA_META = "ULTIMA_DATA_META";
     private DatabaseHelper dbHelper;
-    private GestureDetectorCompat gestureDetector;
+    private GestureDetectorCompat gestureDetector; // Adiciona um GestureDetectorCompat
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lembretes);
 
-        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
+        // Usa a classe reutilizável SwipeGestureListener
+        gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener(this, HistoricoActivity.class, MainActivity.class));
+
+        // Adiciona o listener de toque na tela inteira
+        View layout = findViewById(android.R.id.content);
+        layout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
 
@@ -94,12 +102,6 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
-    }
-
-
     private void inicializarComponentes() {
         timePicker = findViewById(R.id.timePicker);
         radioGroupFrequencia = findViewById(R.id.radioGroupFrequencia);
@@ -110,6 +112,12 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         radioButton1Hora = findViewById(R.id.radioButton1Hora);
         radioButton2Horas = findViewById(R.id.radioButton2Horas);
         timePicker.setIs24HourView(true);
+    }
+
+    // Mudança de tela com swip <---- ---->
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector != null && gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
     private void carregarConfiguracoes() {

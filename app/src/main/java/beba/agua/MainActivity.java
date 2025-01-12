@@ -15,6 +15,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -45,12 +47,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Log.d("MainActivity", "🟢 App iniciado, verificando status do dia...");
 
-        // Inicializa o detector de gestos
-        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
+        // Adiciona SwipeGestureListener para navegar entre telas
+        gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener(this, LembretesActivity.class, null));
 
-        // Define um listener de toque no layout principal
-//        View mainLayout = findViewById(R.id.activity_roleta); // ID do layout principal
-//        mainLayout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+        View layout = findViewById(android.R.id.content);
+        layout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
 
         // Define Status Bar azul para esta tela
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -73,16 +74,13 @@ public class MainActivity extends AppCompatActivity {
         solicitarPermissaoNotificacoes();
         verificarESolicitarPermissaoAlarme();
         verificarMetaDiaria();
-
-        // Inicializa o detector de gestos
-        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
     }
 
-//    @Override
-//    public boolean onTouchEvent(MotionEvent event) {
-//        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
-//    }
-
+    // Mudança de tela com swip <---- ---->
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector != null && gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
 
     //**Solicita permissão para notificações no Android 13+**
     private void solicitarPermissaoNotificacoes() {

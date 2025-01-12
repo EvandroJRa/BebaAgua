@@ -6,4 +6,9 @@
         <item name="android:textColor">@color/azul_escuro</item>
     </style>
 
+    <style name="Theme.BebaAgua.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/white</item>
+    </style>
+
 </resources>

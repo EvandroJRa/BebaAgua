@@ -13,4 +13,8 @@
     <string name="a_cada_1_hora"> 1 hora</string>
     <string name="nenhum_hist_rico_encontrado">Nenhum histórico encontrado.</string>
     <string name="cone_de_status_da_meta">Ícone de status da meta</string>
+    <string name="beba_gua">Beba Água </string>
+    <string name="Versao">Beta 1.0.1 </string>
+    <string name="Desenvovido">dvejra@gmail.com</string>
+
 </resources>
