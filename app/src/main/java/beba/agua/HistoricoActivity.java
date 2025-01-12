@@ -3,7 +3,10 @@ package beba.agua;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,7 +14,6 @@ import java.util.List;
 
 
 public class HistoricoActivity extends AppCompatActivity {
-
     private RecyclerView recyclerViewHistorico;
     private HistoricoAdapter historicoAdapter;
     private DatabaseHelper dbHelper;
@@ -20,10 +22,14 @@ public class HistoricoActivity extends AppCompatActivity {
     private int offset = 0;
     private static final int LIMITE_PAGINACAO = 50; // Número de registros por página
 
+    private GestureDetectorCompat gestureDetector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
+
+       // gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
 
         // Define Status Bar preta para esta tela
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -40,6 +46,11 @@ public class HistoricoActivity extends AppCompatActivity {
 //        }
 
         carregarHistorico();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
     private void carregarHistorico() {

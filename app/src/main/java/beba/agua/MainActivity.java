@@ -4,6 +4,8 @@ import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GestureDetectorCompat;
+
 import android.Manifest;
 import android.app.AlarmManager;
 import android.content.Intent;
@@ -14,6 +16,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -32,18 +36,25 @@ public class MainActivity extends AppCompatActivity {
     private double consumoAtual = 0.0;
     private double metaDiaria = 0.0;
     private DatabaseHelper dbHelper;
-
     private static final String PREFS_NAME = "AppPrefs";
     private static final String META_DIARIA_KEY = "metaDiaria";
     private static final String CONSUMO_ATUAL_KEY = "consumoAtual";
     private static final String ULTIMA_DATA_KEY = "ultimaData";
-    private static final int REQUEST_CODE_NOTIFICACAO = 101;
+    private GestureDetectorCompat gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("MainActivity", "🟢 App iniciado, verificando status do dia...");
+
+        // Inicializa o detector de gestos
+        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
+
+        // Define um listener de toque no layout principal
+//        View mainLayout = findViewById(R.id.activity_roleta); // ID do layout principal
+//        mainLayout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+
 
         // Define Status Bar azul para esta tela
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -66,7 +77,16 @@ public class MainActivity extends AppCompatActivity {
         solicitarPermissaoNotificacoes();
         verificarESolicitarPermissaoAlarme();
         verificarMetaDiaria();
+
+        // Inicializa o detector de gestos
+        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
+
 
     //**Solicita permissão para notificações no Android 13+**
     private void solicitarPermissaoNotificacoes() {
@@ -101,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 
     //**Inicializa componentes da UI**
@@ -170,8 +191,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity", "⚠ Erro ao salvar meta", e);
         }
     }
-
-
 
     // **Carrega a meta e consumo atual do SharedPreferences**
     private void carregarMetaDiaria() {

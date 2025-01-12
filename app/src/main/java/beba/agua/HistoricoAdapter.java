@@ -59,7 +59,6 @@ public class HistoricoAdapter extends RecyclerView.Adapter<HistoricoAdapter.Hist
     public int getItemCount() {
         return historicoList.size();
     }
-
     // **Novo método para adicionar registros sem recriar o Adapter**
     public void adicionarRegistros(List<HistoricoModel> novosRegistros) {
         int startPosition = historicoList.size();

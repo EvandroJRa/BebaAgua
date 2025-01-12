@@ -10,7 +10,6 @@ public class HistoricoModel {
         this.quantidade = quantidade;
         this.metaDiaria = metaDiaria;
     }
-
     public String getData() {
         return data;
     }

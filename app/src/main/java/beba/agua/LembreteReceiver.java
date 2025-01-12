@@ -57,12 +57,11 @@ public class LembreteReceiver extends BroadcastReceiver {
         if (mensagem == null || mensagem.isEmpty()) {
             mensagem = "Hora de beber água! 💧";
         }
-
-        // 🔹 Criar canal de notificação e exibir
+        // Criar canal de notificação e exibir
         criarCanalDeNotificacao(context);
         exibirNotificacao(context, mensagem);
 
-        // 🔄 Reagendar lembrete automaticamente
+        // Reagendar lembrete automaticamente
         reagendarLembrete(context);
     }
 

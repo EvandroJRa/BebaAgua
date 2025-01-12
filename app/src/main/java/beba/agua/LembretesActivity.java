@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -19,6 +20,8 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GestureDetectorCompat;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,7 +38,6 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
     private Switch switchLembrete;
     private Button botaoSalvarLembretes;
     private RadioButton radioButton30Min, radioButton1Hora, radioButton2Horas;
-
     private static final String PREFS_NAME = "LembreteConfig";
     private static final String KEY_MENSAGEM = "mensagemLembrete";
     private static final String KEY_HORA = "horaLembrete";
@@ -45,11 +47,14 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
     private static final String KEY_META_CONCLUIDA = "META_CONCLUIDA";
     private static final String KEY_ULTIMA_DATA_META = "ULTIMA_DATA_META";
     private DatabaseHelper dbHelper;
+    private GestureDetectorCompat gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lembretes);
+
+        //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
 
@@ -61,7 +66,6 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
                 solicitarPermissaoAlarmesExatos(this); // 🔥 Método chamado corretamente
             }
         }
-
         // Inicializa o dbHelper
         dbHelper = new DatabaseHelper(this);
 
@@ -88,6 +92,11 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         verificarPermissaoAlarme();
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
 
