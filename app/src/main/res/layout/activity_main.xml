@@ -5,12 +5,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/iconapp"
-        android:layout_width="126dp"
-        android:layout_height="177dp"
+        android:layout_width="97dp"
+        android:layout_height="110dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
@@ -31,7 +32,7 @@
         android:text="@string/bem_vindo_ao_beba_gua"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iconapp" />
+        app:layout_constraintTop_toBottomOf="@id/iconapp" />
 
     <TextView
         android:id="@+id/campoMetaDiaria"
@@ -43,12 +44,12 @@
         android:text="@string/meta_diaria"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoBemVindo" />
+        app:layout_constraintTop_toBottomOf="@id/textoBemVindo" />
 
     <EditText
         android:id="@+id/editTextNumber"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
@@ -58,7 +59,7 @@
         android:maxWidth="400dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/campoMetaDiaria" />
+        app:layout_constraintTop_toBottomOf="@id/campoMetaDiaria" />
 
     <Button
         android:id="@+id/botaoSalvarMeta"
@@ -68,9 +69,12 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
         android:text="Salvar Meta"
+        app:cornerRadius="16dp"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextNumber" />
+        app:layout_constraintTop_toBottomOf="@id/editTextNumber" />
 
     <TextView
         android:id="@+id/textoConsumoAtual"
@@ -82,7 +86,7 @@
         android:text="Consumo Atual:"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/botaoSalvarMeta" />
+        app:layout_constraintTop_toBottomOf="@id/botaoSalvarMeta" />
 
     <TextView
         android:id="@+id/textoStatus"
@@ -91,24 +95,28 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
+        android:textSize="24dp"
         android:text="0 ml / 0 ml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoConsumoAtual" />
+        app:layout_constraintTop_toBottomOf="@id/textoConsumoAtual" />
+
+    <!-- 🔥 Novo botão para abrir o histórico de consumo -->
 
     <GridLayout
         android:id="@+id/gridLayoutBotoes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="84dp"
         android:layout_marginEnd="24dp"
         android:alignmentMode="alignMargins"
         android:columnCount="3"
         android:rowCount="2"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textoStatus">
+        app:layout_constraintTop_toBottomOf="@id/textoStatus">
 
         <Button
             android:id="@+id/botao100ml"
@@ -117,16 +125,24 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="100 ml" />
+            android:backgroundTint="@color/black"
+            android:text="100 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao150ml"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_row="0"
             android:layout_rowWeight="1"
+            android:layout_column="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="150 ml" />
+            android:backgroundTint="@color/black"
+            android:text="150 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao250ml"
@@ -135,7 +151,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="250 ml" />
+            android:backgroundTint="@color/black"
+            android:text="250 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao500ml"
@@ -144,7 +163,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="500 ml" />
+            android:backgroundTint="@color/black"
+            android:text="500 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao600ml"
@@ -153,7 +175,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="600 ml" />
+            android:backgroundTint="@color/black"
+            android:text="600 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao750ml"
@@ -162,9 +187,42 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="750 ml" />
+            android:backgroundTint="@color/black"
+            android:text="750 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
     </GridLayout>
+
+    <Button
+        android:id="@+id/botaoAbrirLembretes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:backgroundTint="@color/black"
+        android:text="Configurar Lembretes"
+        android:textColor="@color/white"
+        app:cornerRadius="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/gridLayoutBotoes" />
+
+    <Button
+        android:id="@+id/botaoHistorico"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/black"
+        android:text="Histórico de Consumo"
+        android:textColor="@color/white"
+        app:cornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.484"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/botaoAbrirLembretes"
+        app:layout_constraintVertical_bias="0.056" />
 
     <ProgressBar
         android:id="@+id/barraProgresso"
@@ -172,11 +230,27 @@
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:indeterminate="false"
+        app:layout_constraintBottom_toTopOf="@+id/gridLayoutBotoes"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textoStatus" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/Desenvovido"
+        android:textColor="@color/black"
+        android:textSize="12dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gridLayoutBotoes" />
+        app:layout_constraintTop_toBottomOf="@+id/barraProgresso"
+        app:layout_constraintVertical_bias="1.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
