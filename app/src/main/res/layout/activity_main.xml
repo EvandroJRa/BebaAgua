@@ -95,22 +95,26 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
+        android:textSize="24dp"
         android:text="0 ml / 0 ml"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textoConsumoAtual" />
+
+    <!-- 🔥 Novo botão para abrir o histórico de consumo -->
 
     <GridLayout
         android:id="@+id/gridLayoutBotoes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="84dp"
         android:layout_marginEnd="24dp"
         android:alignmentMode="alignMargins"
         android:columnCount="3"
         android:rowCount="2"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textoStatus">
 
@@ -121,22 +125,24 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="100 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="100 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao150ml"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_row="0"
             android:layout_rowWeight="1"
+            android:layout_column="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="150 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="150 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao250ml"
@@ -145,10 +151,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="250 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="250 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao500ml"
@@ -157,10 +163,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="500 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="500 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao600ml"
@@ -169,10 +175,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="600 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="600 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
         <Button
             android:id="@+id/botao750ml"
@@ -181,10 +187,10 @@
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="750 ml"
-            app:cornerRadius="16dp"
             android:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:text="750 ml"
+            android:textColor="@color/white"
+            app:cornerRadius="16dp" />
 
     </GridLayout>
 
@@ -192,30 +198,31 @@
         android:id="@+id/botaoAbrirLembretes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Configurar Lembretes"
-        app:cornerRadius="16dp"
+        android:layout_marginTop="80dp"
         android:backgroundTint="@color/black"
+        android:text="Configurar Lembretes"
         android:textColor="@color/white"
+        app:cornerRadius="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/gridLayoutBotoes" />
 
-    <!-- 🔥 Novo botão para abrir o histórico de consumo -->
     <Button
         android:id="@+id/botaoHistorico"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Histórico de Consumo"
-        app:cornerRadius="16dp"
+        android:layout_marginTop="20dp"
         android:backgroundTint="@color/black"
+        android:text="Histórico de Consumo"
         android:textColor="@color/white"
+        app:cornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.484"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/botaoAbrirLembretes" />
+        app:layout_constraintTop_toBottomOf="@id/botaoAbrirLembretes"
+        app:layout_constraintVertical_bias="0.056" />
 
     <ProgressBar
         android:id="@+id/barraProgresso"
@@ -225,12 +232,14 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:indeterminate="false"
+        app:layout_constraintBottom_toTopOf="@+id/gridLayoutBotoes"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/botaoHistorico" />
+        app:layout_constraintTop_toBottomOf="@+id/textoStatus" />
 
     <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"

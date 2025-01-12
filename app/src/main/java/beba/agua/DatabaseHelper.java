@@ -31,7 +31,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COLUMN_DATA + " TEXT NOT NULL UNIQUE, " +
             COLUMN_QUANTIDADE + " REAL NOT NULL DEFAULT 0, " +
-            COLUMN_META_DIARIA + " REAL NOT NULL DEFAULT 2000)";
+            COLUMN_META_DIARIA + " REAL NOT NULL DEFAULT 500)";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -62,7 +62,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE " + TABLE_HISTORICO + " RENAME TO historico_old");
                 db.execSQL(CREATE_TABLE_HISTORICO);
                 db.execSQL("INSERT INTO " + TABLE_HISTORICO + " (_id, data, quantidade, metaDiaria) " +
-                        "SELECT _id, data, IFNULL(quantidade, 0), IFNULL(metaDiaria, 2000) FROM historico_old");
+                        "SELECT _id, data, IFNULL(quantidade, 0), IFNULL(metaDiaria, 500) FROM historico_old");
                 db.execSQL("DROP TABLE historico_old");
                 Log.d("DatabaseHelper", "🔄 Banco atualizado para a versão " + newVersion);
             }
@@ -181,7 +181,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
             values.put(COLUMN_DATA, dataAtual);
             values.put(COLUMN_QUANTIDADE, 0); // Reseta o consumo diário
-            values.put(COLUMN_META_DIARIA, 2000); // Define a meta padrão (ajuste conforme necessário)
+            values.put(COLUMN_META_DIARIA, 0); // Define a meta padrão (ajuste conforme necessário)
 
             db.insert(TABLE_HISTORICO, null, values);
             Log.d("DatabaseHelper", "📌 Novo dia detectado! Meta reiniciada para " + dataAtual);
