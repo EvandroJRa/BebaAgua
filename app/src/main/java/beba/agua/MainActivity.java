@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Log.d("MainActivity", "🟢 App iniciado, verificando status do dia...");
 
         // Define Status Bar azul para esta tela
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -57,11 +57,15 @@ public class MainActivity extends AppCompatActivity {
         carregarMetaDiaria();
 
         if (isNovoDia()) {
-            resetarConsumoDiario();
+            Log.d("MainActivity", "🌅 Novo dia detectado! Resetando metas e reagendando lembretes...");
+            resetarConsumoDiario();  // Reseta a meta diária
+            LembretesActivity.reagendarLembretes(this); // 🔥 Reagenda os lembretes
         }
+
         atualizarInterface();
         solicitarPermissaoNotificacoes();
         verificarESolicitarPermissaoAlarme();
+        verificarMetaDiaria();
     }
 
     //**Solicita permissão para notificações no Android 13+**
@@ -90,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.setData(Uri.parse("package:" + getPackageName()));
                 startActivity(intent);
 
-                // 🔹 Salva no SharedPreferences que a permissão já foi solicitada
+                // Salva no SharedPreferences que a permissão já foi solicitada
                 prefs.edit().putBoolean("PERMISSAO_ALARME_SOLICITADA", true).apply();
             } else {
                 Log.d("MainActivity", "✅ Permissão de alarme exato já concedida ou já foi solicitada antes.");
@@ -148,18 +152,26 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             metaDiaria = Double.parseDouble(metaString);
+
+            // 🔥 Atualiza no SharedPreferences
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
                     .putFloat(META_DIARIA_KEY, (float) metaDiaria)
                     .apply();
 
+            // 🔥 Atualiza no Banco de Dados
+            String dataAtual = obterDataAtual();
+            dbHelper.atualizarMetaDiaria(dataAtual, metaDiaria);
+
             botaoSalvarMeta.setEnabled(false);
             atualizarInterface();
-            Log.d("MainActivity", "📌 Nova meta salva: " + metaDiaria + "ml");
+            Log.d("MainActivity", "📌 Nova meta salva e ATUALIZADA no banco: " + metaDiaria + "ml");
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Valor inválido para a meta", Toast.LENGTH_SHORT).show();
             Log.e("MainActivity", "⚠ Erro ao salvar meta", e);
         }
     }
+
+
 
     // **Carrega a meta e consumo atual do SharedPreferences**
     private void carregarMetaDiaria() {
@@ -199,6 +211,33 @@ public class MainActivity extends AppCompatActivity {
         barraProgresso.setProgress(metaDiaria > 0 ? progresso : 0);
     }
 
+    private void verificarMetaDiaria() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean metaConcluida = prefs.getBoolean("META_CONCLUIDA_HOJE", false);
+        String ultimaDataSalva = prefs.getString(ULTIMA_DATA_KEY, "");
+
+        String dataAtual = obterDataAtual(); // 🚀 Obtém a data do sistema
+
+        // 🔄 Se a data mudou, resetar a meta concluída
+        if (!dataAtual.equals(ultimaDataSalva)) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Reseta a meta concluída
+            editor.putString(ULTIMA_DATA_KEY, dataAtual);
+            editor.apply();
+
+            ativarBotoesConsumo(); // Reativa os botões de consumo de água
+            Log.d("MainActivity", "🔄 Novo dia detectado! Meta resetada e botões ativados.");
+        } else {
+            if (metaConcluida) {
+                desativarBotoesConsumo();
+                Log.d("MainActivity", "🚫 Meta já concluída para hoje, botões desativados.");
+            } else {
+                ativarBotoesConsumo();
+                Log.d("MainActivity", "✅ Meta não concluída, botões ativados.");
+            }
+        }
+    }
+
     //**Verifica se é um novo dia**
     private boolean isNovoDia() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -208,29 +247,16 @@ public class MainActivity extends AppCompatActivity {
         if (!ultimaData.equals(dataAtual)) {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(ULTIMA_DATA_KEY, dataAtual);
-            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Reseta a meta concluída
-
-            boolean lembretesForamAtivados = prefs.getBoolean("LEMBRETES_FORAM_ATIVADOS", false);
-            boolean lembretesDesativadosManual = prefs.getBoolean("LEMBRETES_DESATIVADOS_MANUALMENTE", false);
-
-            if (lembretesForamAtivados) {
-                if (!lembretesDesativadosManual) {
-                    LembretesActivity.reagendarLembretes(this);
-                    Log.d(TAG, "🔄 Novo dia! Lembretes reativados automaticamente.");
-                } else {
-                    Log.d(TAG, "⚠️ Lembretes não foram reativados pois foram desativados manualmente.");
-                }
-            }
-
-            // 🔄 Sempre remover flags para não interferir no próximo dia
-            editor.remove("LEMBRETES_FORAM_ATIVADOS");
-            editor.remove("LEMBRETES_DESATIVADOS_MANUALMENTE");
+            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Libera o registro da meta
             editor.apply();
 
+            Log.d("MainActivity", "🔄 Novo dia detectado! Resetando dados do usuário.");
             return true;
         }
         return false;
     }
+
+
 
     // **Reseta o consumo ao iniciar um novo dia**
     private void resetarConsumoDiario() {
@@ -239,21 +265,35 @@ public class MainActivity extends AppCompatActivity {
                 .putFloat(CONSUMO_ATUAL_KEY, 0)
                 .apply();
         atualizarInterface();
-        botaoSalvarMeta.setEnabled(true);
-        Log.d("MainActivity", "🆕 Novo dia! Consumo resetado.");
+        ativarBotoesConsumo(); // 🔥 Reativa os botões
+        Log.d("MainActivity", "🌅 Novo dia! Consumo resetado e botões ativados.");
     }
+
+
 
     private String obterDataAtual() {
         return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
 
+    private void definirEstadoBotoesConsumo(boolean ativar) {
+        botao100ml.setEnabled(ativar);
+        botao150ml.setEnabled(ativar);
+        botao250ml.setEnabled(ativar);
+        botao500ml.setEnabled(ativar);
+        botao600ml.setEnabled(ativar);
+        botao750ml.setEnabled(ativar);
+        botaoSalvarMeta.setEnabled(ativar);
+
+        Log.d("MainActivity", ativar ? "✅ Botões ativados." : "🚫 Botões desativados.");
+    }
+
+    // Método para desativar botões
     private void desativarBotoesConsumo() {
-        botao100ml.setEnabled(false);
-        botao150ml.setEnabled(false);
-        botao250ml.setEnabled(false);
-        botao500ml.setEnabled(false);
-        botao600ml.setEnabled(false);
-        botao750ml.setEnabled(false);
-        botaoSalvarMeta.setEnabled(false);
+        definirEstadoBotoesConsumo(false);
+    }
+
+    // Método para ativar botões
+    private void ativarBotoesConsumo() {
+        definirEstadoBotoesConsumo(true);
     }
 }

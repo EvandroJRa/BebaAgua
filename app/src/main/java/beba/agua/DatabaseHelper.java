@@ -7,13 +7,18 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
+    private Context context;
     private static final String DATABASE_NAME = "bebaagua.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 1;
 
     private static final String TABLE_HISTORICO = "historico";
     private static final String COLUMN_ID = "_id";
@@ -30,6 +35,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     public interface LembretesListener {
@@ -82,6 +88,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
+        // 🔄 Garante que o novo dia foi iniciado antes de registrar consumo
+        iniciarNovoDia();
+
         if (verificarRegistroExistente(data)) {
             Cursor cursor = db.rawQuery("SELECT " + COLUMN_QUANTIDADE + " FROM " + TABLE_HISTORICO + " WHERE " + COLUMN_DATA + " = ?", new String[]{data});
             double consumoAtual = 0;
@@ -110,6 +119,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    // 🔥 Atualiza a meta diária no banco de dados
+    public void atualizarMetaDiaria(String data, double novaMeta) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_META_DIARIA, novaMeta);
+
+        int rowsAffected = db.update(TABLE_HISTORICO, values, COLUMN_DATA + " = ?", new String[]{data});
+
+        if (rowsAffected > 0) {
+            Log.d("DatabaseHelper", "✅ Meta diária ATUALIZADA para " + novaMeta + "ml na data " + data);
+        } else {
+            Log.w("DatabaseHelper", "⚠️ Nenhum registro atualizado! Criando nova entrada para " + data);
+            values.put(COLUMN_DATA, data);
+            values.put(COLUMN_QUANTIDADE, 0); // Inicializa com 0ml de consumo
+            db.insert(TABLE_HISTORICO, null, values);
+        }
+    }
+
     // Obtém o histórico de consumo ordenado por data
     public Cursor obterHistorico() {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -128,40 +155,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return consumo;
     }
 
-    // Obtém a meta diária de um dia específico
-    public double obterMetaDiaria(String data) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT " + COLUMN_META_DIARIA + " FROM " + TABLE_HISTORICO + " WHERE " + COLUMN_DATA + " = ?", new String[]{data});
-        double meta = 2000.0;
-        if (cursor.moveToFirst()) {
-            meta = cursor.getDouble(0);
-        }
-        cursor.close();
-        return meta;
-    }
-
-    // Deleta um registro específico do histórico
-    public void deletarRegistro(String data) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_HISTORICO, COLUMN_DATA + " = ?", new String[]{data});
-    }
-
-    // Deleta todo o histórico
-    public void limparHistorico() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DELETE FROM " + TABLE_HISTORICO);
-        Log.d("DatabaseHelper", "🗑️ Histórico apagado.");
-    }
-
-    // Verifica se o banco de dados está vazio
-    public boolean isBancoVazio() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_HISTORICO, null);
-        boolean isEmpty = cursor.moveToFirst() && cursor.getInt(0) == 0;
-        cursor.close();
-        return isEmpty;
-    }
-
     // Obtém histórico paginado (para Scroll Infinito)
     public List<HistoricoModel> obterHistoricoPaginado(int offset, int limite) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -173,6 +166,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return historicoList;
     }
+
+    public String obterDataAtual() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(Calendar.getInstance().getTime());
+    }
+
+    public void iniciarNovoDia() {
+        String dataAtual = obterDataAtual();
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Verifica se já existe um registro para a data atual
+        if (!verificarRegistroExistente(dataAtual)) {
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_DATA, dataAtual);
+            values.put(COLUMN_QUANTIDADE, 0); // Reseta o consumo diário
+            values.put(COLUMN_META_DIARIA, 2000); // Define a meta padrão (ajuste conforme necessário)
+
+            db.insert(TABLE_HISTORICO, null, values);
+            Log.d("DatabaseHelper", "📌 Novo dia detectado! Meta reiniciada para " + dataAtual);
+        } else {
+            Log.d("DatabaseHelper", "🔄 Data já registrada no histórico. Nenhuma ação necessária.");
+        }
+    }
+
+
+
+
     // -------------------------------------------------------------------------------//
 //    // dados ficticio, para teste
 //    public void inserirDadosFicticios() {
