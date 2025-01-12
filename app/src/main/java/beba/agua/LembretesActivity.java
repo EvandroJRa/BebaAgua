@@ -12,6 +12,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TimePicker;
@@ -33,12 +34,20 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
     private Switch switchLembrete;
     private Button botaoSalvarLembretes;
 
+    private RadioButton radioButton30Min;
+    private RadioButton radioButton1Hora;
+    private RadioButton radioButton2Horas;
+    //private RadioGroup radioGroupFrequencia;
+
+
     private static final String PREFS_NAME = "LembreteConfig";
     private static final String KEY_MENSAGEM = "mensagemLembrete";
     private static final String KEY_FREQUENCIA = "frequenciaLembrete";
     private static final String KEY_HORA = "horaLembrete";
     private static final String KEY_MINUTO = "minutoLembrete";
     static final String KEY_NOTIFICACAO = "notificacaoAtivada";
+    private static final String KEY_INTERVALO = "lembrete_intervalo"; // Chave para armazenar o intervalo dos lembretes
+
     private DatabaseHelper dbHelper;
 
     @Override
@@ -51,21 +60,85 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
             getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.black));
         }
 
+        // Inicializa os componentes da interface
+        radioButton30Min = findViewById(R.id.radioButton30Min);
+        radioButton1Hora = findViewById(R.id.radioButton1Hora);
+        radioButton2Horas = findViewById(R.id.radioButton2Horas);
+        radioGroupFrequencia = findViewById(R.id.radioGroupFrequencia);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean primeiroAcesso = prefs.getBoolean("KEY_PRIMEIRO_ACESSO", true); // Default: true
+        int intervaloMinutos = prefs.getInt(KEY_INTERVALO, -1); // -1 indica que não há valor salvo
+
+        if (primeiroAcesso || intervaloMinutos == -1) {
+            // Se for o primeiro acesso, desativa os RadioButtons
+            radioButton30Min.setEnabled(false);
+            radioButton1Hora.setEnabled(false);
+            radioButton2Horas.setEnabled(false);
+
+            Log.d(TAG, "🚀 Primeiro acesso: RadioButtons desativados aguardando interação.");
+        } else {
+            // Atualiza a seleção dos RadioButtons conforme o valor salvo
+            if (intervaloMinutos == 30) {
+                radioButton30Min.setChecked(true);
+            } else if (intervaloMinutos == 60) {
+                radioButton1Hora.setChecked(true);
+            } else if (intervaloMinutos == 120) {
+                radioButton2Horas.setChecked(true);
+            }
+        }
+
+        // Listener para quando o usuário interagir pela primeira vez
+        radioGroupFrequencia.setOnCheckedChangeListener((group, checkedId) -> {
+            salvarConfiguracoes();
+            int novoIntervalo = 30; // Padrão: 30 minutos
+
+            if (checkedId == R.id.radioButton1Hora) {
+                novoIntervalo = 60;
+            } else if (checkedId == R.id.radioButton2Horas) {
+                novoIntervalo = 120;
+            }
+
+            // Habilita os RadioButtons após a primeira interação
+            if (primeiroAcesso) {
+                radioButton30Min.setEnabled(true);
+                radioButton1Hora.setEnabled(true);
+                radioButton2Horas.setEnabled(true);
+
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("KEY_PRIMEIRO_ACESSO", false); // Define que o usuário já interagiu
+                editor.apply();
+                Log.d(TAG, "✅ Primeiro acesso concluído: RadioButtons habilitados.");
+            }
+
+            // Salva a seleção no SharedPreferences
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt(KEY_INTERVALO, novoIntervalo);
+            editor.apply();
+
+            Log.d(TAG, "✅ Novo intervalo de lembrete salvo: " + novoIntervalo + " minutos");
+        });
+
+        // Exibe no Logcat o horário salvo do alarme
+        Log.d(TAG, "🕒 Tela de lembretes aberta! Intervalo salvo: " + (intervaloMinutos == -1 ? "Nenhum definido" : intervaloMinutos + " min"));
+
+        // Chama os métodos para inicializar os componentes e configurações
         inicializarComponentes();
         carregarConfiguracoes();
         configurarListeners();
 
         // Inicializa o banco de dados e define o listener
         dbHelper = new DatabaseHelper(this);
-        dbHelper.setLembretesListener(this); //Define a LembretesActivity como Listener
+        dbHelper.setLembretesListener(this);
 
+        // Solicitação e verificação de permissões de alarmes exatos
         solicitarPermissaoAlarme();
         verificarPermissaoAlarme();
         solicitarPermissaoAlarmesExatos();
-        agendarLembretesParaProximoDia();
 
         Log.d(TAG, "🟢 Tela de lembretes carregada com sucesso.");
     }
+
     private void inicializarComponentes() {
         timePicker = findViewById(R.id.timePicker);
         radioGroupFrequencia = findViewById(R.id.radioGroupFrequencia);
@@ -186,6 +259,9 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         Log.d(TAG, "🔄 Configurações carregadas.");
     }
     private void agendarLembretes() {
+        salvarConfiguracoes();
+        Log.d(TAG, "✅ Lembrete agendado. Configurações salvas.");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
             if (!alarmManager.canScheduleExactAlarms()) {
@@ -193,10 +269,15 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
                 return;
             }
         }
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // Obtém o intervalo salvo no SharedPreferences
+        int intervaloMinutos = prefs.getInt(KEY_INTERVALO, 30); // Padrão: 30 minutos
+        long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
+
         int hora = timePicker.getHour();
         int minuto = timePicker.getMinute();
-        int intervaloMinutos = obterFrequenciaSelecionada();
-        long intervaloMillis = TimeUnit.MINUTES.toMillis(intervaloMinutos);
         String mensagem = editTextMensagem.getText().toString();
 
         Calendar calendar = Calendar.getInstance();
@@ -205,7 +286,7 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         calendar.set(Calendar.SECOND, 0);
 
         if (calendar.before(Calendar.getInstance())) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            calendar.add(Calendar.MINUTE, 1); // Ajusta para 1 minuto depois se o horário já passou
         }
 
         Intent intent = new Intent(this, LembreteReceiver.class);
@@ -222,24 +303,9 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
                 intervaloMillis,
                 pendingIntent);
 
-        salvarConfiguracoes();
+        salvarConfiguracoes(); // Certifica-se de salvar a configuração atual no SharedPreferences
 
         Log.d(TAG, "✅ Lembrete AGENDADO para " + hora + ":" + minuto + " e será repetido a cada " + intervaloMinutos + " minutos.");
-    }
-
-
-    private void salvarConfiguracoes() {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-
-        editor.putString(KEY_MENSAGEM, editTextMensagem.getText().toString());
-        editor.putBoolean(KEY_NOTIFICACAO, switchLembrete.isChecked());
-        editor.putInt(KEY_FREQUENCIA, radioGroupFrequencia.getCheckedRadioButtonId());
-        editor.putInt(KEY_HORA, timePicker.getHour());
-        editor.putInt(KEY_MINUTO, timePicker.getMinute());
-
-        editor.apply();
-        Log.d(TAG, "💾 Configurações salvas com sucesso.");
     }
 
     private void cancelarNotificacoes() {
@@ -277,19 +343,19 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
         int hora = prefs.getInt(KEY_HORA, 8);
         int minuto = prefs.getInt(KEY_MINUTO, 0);
 
-        // 🔹 Define a frequência com base no RadioButton selecionado
+        // 🔹Define a frequência com base no RadioButton selecionado
         int intervaloMinutos = (radioSelecionado == R.id.radioButton30Min) ? 30 :
                 (radioSelecionado == R.id.radioButton2Horas) ? 120 : 60;
 
         Log.d(TAG, "🔄 Reagendando lembrete para " + hora + ":" + minuto + " a cada " + intervaloMinutos + " minutos.");
 
-        // 🔹 Configura o horário do primeiro lembrete
+        // Configura o horário do primeiro lembrete
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hora);
         calendar.set(Calendar.MINUTE, minuto);
         calendar.set(Calendar.SECOND, 0);
 
-        // 🔹 Se a hora já passou, agendar para o próximo dia
+        // Se a hora já passou, agendar para o próximo dia
         if (calendar.before(Calendar.getInstance())) {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
@@ -314,64 +380,41 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
 
         Log.d(TAG, "✅ Lembrete reagendado com sucesso!");
     }
-
     @Override
     public void verificarEAtualizarLembretes() {
         Log.d(TAG, "🎯 Meta atingida! Cancelando lembretes até o próximo dia.");
         cancelarNotificacoes();
         Toast.makeText(this, "Meta diária concluída! Lembretes pausados até amanhã.", Toast.LENGTH_LONG).show();
     }
-
-    private void agendarLembretesParaProximoDia() {
+    //Salvar configurações
+    private void salvarConfiguracoes() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean notificacaoAtivada = prefs.getBoolean(KEY_NOTIFICACAO, true);
+        SharedPreferences.Editor editor = prefs.edit();
 
-        if (!notificacaoAtivada) {
-            Log.d(TAG, "🔕 Lembretes estão desativados, não será feito reagendamento.");
-            return;
+        // Obtém o horário do TimePicker
+        int hora = timePicker.getHour();
+        int minuto = timePicker.getMinute();
+
+        // Obtém o intervalo de lembrete salvo no RadioButton selecionado
+        int intervaloMinutos = 30; // Padrão
+        if (radioButton1Hora.isChecked()) {
+            intervaloMinutos = 60;
+        } else if (radioButton2Horas.isChecked()) {
+            intervaloMinutos = 120;
         }
 
-        int hora = prefs.getInt(KEY_HORA, 8);
-        int minuto = prefs.getInt(KEY_MINUTO, 0);
+        // Salva os valores no SharedPreferences
+        editor.putInt(KEY_HORA, hora);
+        editor.putInt(KEY_MINUTO, minuto);
+        editor.putInt(KEY_INTERVALO, intervaloMinutos);
+        editor.apply(); // Aplica as alterações
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hora);
-        calendar.set(Calendar.MINUTE, minuto);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0); // 🔹 Evita problemas de precisão
-
-        Calendar agora = Calendar.getInstance();
-        agora.set(Calendar.SECOND, 0);
-        agora.set(Calendar.MILLISECOND, 0); // 🔹 Remove milissegundos para evitar erros na comparação
-
-        // 🔹 Se o horário já passou HOJE, agenda para amanhã
-        if (calendar.before(agora)) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            Log.d(TAG, "⏭️ O horário já passou. Agendando para o próximo dia.");
-        } else {
-            Log.d(TAG, "📅 O horário ainda não passou. Agendando para hoje mesmo.");
-        }
-
-        Log.d(TAG, "📅 Lembrete final agendado para: " + calendar.getTime());
-
-        Intent intent = new Intent(this, LembreteReceiver.class);
-        intent.setAction("beba.agua.LembreteReceiver");
-        intent.putExtra("mensagem", "Hora de beber água! 💧");
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-        }
-
-        Log.d(TAG, "✅ Lembrete AGENDADO para: " + calendar.getTime());
+        Log.d(TAG, "💾 Configurações salvas: Hora: " + hora + " Minuto: " + minuto + " Intervalo: " + intervaloMinutos + " minutos.");
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        salvarConfiguracoes(); // Garante que as configurações são salvas ao sair da tela
+        Log.d(TAG, "💾 Configurações salvas ao sair da tela.");
     }
 }
