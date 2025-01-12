@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GestureDetectorCompat;
-
 import android.Manifest;
 import android.app.AlarmManager;
 import android.content.Intent;
@@ -16,8 +15,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -55,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
 //        View mainLayout = findViewById(R.id.activity_roleta); // ID do layout principal
 //        mainLayout.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
 
-
         // Define Status Bar azul para esta tela
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
@@ -82,10 +78,10 @@ public class MainActivity extends AppCompatActivity {
         //gestureDetector = new GestureDetectorCompat(this, new GestureListener(this));
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+//    }
 
 
     //**Solicita permissão para notificações no Android 13+**
@@ -121,8 +117,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 
     //**Inicializa componentes da UI**
     private void inicializarComponentes() {
@@ -275,8 +269,6 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-
-
     // **Reseta o consumo ao iniciar um novo dia**
     private void resetarConsumoDiario() {
         consumoAtual = 0;
@@ -287,8 +279,6 @@ public class MainActivity extends AppCompatActivity {
         ativarBotoesConsumo(); // 🔥 Reativa os botões
         Log.d("MainActivity", "🌅 Novo dia! Consumo resetado e botões ativados.");
     }
-
-
 
     private String obterDataAtual() {
         return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -305,12 +295,10 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("MainActivity", ativar ? "✅ Botões ativados." : "🚫 Botões desativados.");
     }
-
     // Método para desativar botões
     private void desativarBotoesConsumo() {
         definirEstadoBotoesConsumo(false);
     }
-
     // Método para ativar botões
     private void ativarBotoesConsumo() {
         definirEstadoBotoesConsumo(true);
