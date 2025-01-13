@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-
+import android.content.pm.ActivityInfo;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,6 +28,8 @@ public class HistoricoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historico);
+        // Trava a orientação da tela em retrato (vertical)
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Adiciona SwipeGestureListener para navegar entre telas
         gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener(this, null, LembretesActivity.class));

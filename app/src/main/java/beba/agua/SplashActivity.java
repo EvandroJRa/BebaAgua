@@ -1,6 +1,7 @@
 package beba.agua;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +16,8 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar();
         setContentView(R.layout.activity_splash);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Aguarda um tempo antes de abrir a MainActivity
         new Handler(Looper.getMainLooper()).postDelayed(() -> {

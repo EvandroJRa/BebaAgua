@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.AlarmManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -45,7 +46,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         Log.d("MainActivity", "🟢 App iniciado, verificando status do dia...");
+
+        inicializarComponentes();
+        configurarListeners();
+        carregarMetaDiaria();
+        atualizarInterface();
+        solicitarPermissaoNotificacoes();
+        verificarESolicitarPermissaoAlarme();
 
         // Adiciona SwipeGestureListener para navegar entre telas
         gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener(this, LembretesActivity.class, null));
@@ -60,26 +70,30 @@ public class MainActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        inicializarComponentes();
-        configurarListeners();
-        carregarMetaDiaria();
-
         if (isNovoDia()) {
             Log.d("MainActivity", "🌅 Novo dia detectado! Resetando metas e reagendando lembretes...");
             resetarConsumoDiario();  // Reseta a meta diária
             LembretesActivity.reagendarLembretes(this); // 🔥 Reagenda os lembretes
         }
 
-        atualizarInterface();
-        solicitarPermissaoNotificacoes();
-        verificarESolicitarPermissaoAlarme();
+        if (isNovoDia()) {
+            Log.d("MainActivity", "🌅 Novo dia detectado! Resetando metas e reagendando lembretes...");
+            resetarConsumoDiario();
+            LembretesActivity.reagendarLembretes(this);
+        }
         verificarMetaDiaria();
+        atualizarInterface();
     }
 
     // Mudança de tela com swip <---- ---->
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return gestureDetector != null && gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
+    //Obter data atual
+    private String obterDataAtual() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
     //**Solicita permissão para notificações no Android 13+**
@@ -155,9 +169,9 @@ public class MainActivity extends AppCompatActivity {
         botao750ml.setOnClickListener(view -> adicionarConsumo(750));
     }
 
-    //**Salva a meta diária no SharedPreferences**
+    //Salva a meta diária no SharedPreferences
     private void salvarMetaDiaria() {
-        String metaString = editTextMeta.getText().toString();
+        String metaString = editTextMeta.getText().toString().trim();
         if (metaString.isEmpty()) {
             Toast.makeText(this, "Insira uma meta diária ex: 2000ml = 2L", Toast.LENGTH_SHORT).show();
             return;
@@ -166,23 +180,27 @@ public class MainActivity extends AppCompatActivity {
         try {
             metaDiaria = Double.parseDouble(metaString);
 
-            // 🔥 Atualiza no SharedPreferences
-            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                    .putFloat(META_DIARIA_KEY, (float) metaDiaria)
-                    .apply();
+            // 🔥 Salvar a meta e a data no SharedPreferences
+            SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+            editor.putFloat(META_DIARIA_KEY, (float) metaDiaria);
+            editor.putString(ULTIMA_DATA_KEY, obterDataAtual()); // Salva a data da meta definida
+            editor.apply();
 
-            // 🔥 Atualiza no Banco de Dados
+            // 🔥 Atualizar no Banco de Dados
             String dataAtual = obterDataAtual();
             dbHelper.atualizarMetaDiaria(dataAtual, metaDiaria);
 
+            // 🔒 Desativar o campo e o botão após salvar
+            editTextMeta.setEnabled(false);
             botaoSalvarMeta.setEnabled(false);
-            atualizarInterface();
-            Log.d("MainActivity", "📌 Nova meta salva e ATUALIZADA no banco: " + metaDiaria + "ml");
+            Toast.makeText(this, "Meta definida com sucesso!", Toast.LENGTH_SHORT).show();
+            Log.d("MainActivity", "📌 Nova meta definida: " + metaDiaria + "ml. Campo e botão desativados.");
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Valor inválido para a meta", Toast.LENGTH_SHORT).show();
             Log.e("MainActivity", "⚠ Erro ao salvar meta", e);
         }
     }
+
 
     // **Carrega a meta e consumo atual do SharedPreferences**
     private void carregarMetaDiaria() {
@@ -215,50 +233,62 @@ public class MainActivity extends AppCompatActivity {
         atualizarInterface();
     }
 
-    // **Atualiza a interface**
+    // Atualiza a interface
     private void atualizarInterface() {
         textoStatus.setText(String.format(Locale.getDefault(), "%.0f ml / %.0f ml", consumoAtual, metaDiaria));
         int progresso = (int) ((consumoAtual / metaDiaria) * 100);
         barraProgresso.setProgress(metaDiaria > 0 ? progresso : 0);
     }
-
+    //Verificar meta diária
     private void verificarMetaDiaria() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean metaConcluida = prefs.getBoolean("META_CONCLUIDA_HOJE", false);
-        String ultimaDataSalva = prefs.getString(ULTIMA_DATA_KEY, "");
+        String ultimaDataSalva = prefs.getString(ULTIMA_DATA_KEY, ""); // Data da última meta salva
+        String dataAtual = obterDataAtual(); // Data do dia atual
+        float metaSalva = prefs.getFloat(META_DIARIA_KEY, 0.0f); // Recupera a meta salva
 
-        String dataAtual = obterDataAtual(); // 🚀 Obtém a data do sistema
+        Log.d("MainActivity", "🔍 Verificando data: Última - " + ultimaDataSalva + " | Atual - " + dataAtual);
 
-        // 🔄 Se a data mudou, resetar a meta concluída
+        // 🚀 Se for um novo dia, redefinir a meta e ativar o campo e botão
         if (!dataAtual.equals(ultimaDataSalva)) {
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Reseta a meta concluída
+            editor.putBoolean("META_CONCLUIDA_HOJE", false);
             editor.putString(ULTIMA_DATA_KEY, dataAtual);
+            editor.putFloat(META_DIARIA_KEY, 0.0f); // Resetar a meta diária
             editor.apply();
 
-            ativarBotoesConsumo(); // Reativa os botões de consumo de água
-            Log.d("MainActivity", "🔄 Novo dia detectado! Meta resetada e botões ativados.");
+            // 🔥 Libera o campo e o botão para nova edição
+            editTextMeta.setEnabled(true);
+            botaoSalvarMeta.setEnabled(true);
+            editTextMeta.setText(""); // Limpa o campo para nova inserção
+
+            Log.d("MainActivity", "🟢 Novo dia detectado! Campo de meta e botão ativados.");
         } else {
-            if (metaConcluida) {
-                desativarBotoesConsumo();
-                Log.d("MainActivity", "🚫 Meta já concluída para hoje, botões desativados.");
+            // 🚨 Se já houver uma meta definida, desativa o campo e o botão
+            if (metaSalva > 0) {
+                editTextMeta.setEnabled(false);
+                botaoSalvarMeta.setEnabled(false);
+                editTextMeta.setText(String.valueOf(metaSalva)); // Exibe a meta salva
+                Log.d("MainActivity", "🔒 Meta já definida hoje: " + metaSalva + "ml. Campo e botão desativados.");
             } else {
-                ativarBotoesConsumo();
-                Log.d("MainActivity", "✅ Meta não concluída, botões ativados.");
+                editTextMeta.setEnabled(true);
+                botaoSalvarMeta.setEnabled(true);
+                Log.d("MainActivity", "🟢 Nenhuma meta definida hoje. Campo e botão ativados.");
             }
         }
     }
 
-    //**Verifica se é um novo dia**
+
+    //Verifica se é um novo dia
     private boolean isNovoDia() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String ultimaData = prefs.getString(ULTIMA_DATA_KEY, "");
         String dataAtual = obterDataAtual();
 
-        if (!ultimaData.equals(dataAtual)) {
+        if (!dataAtual.equals(ultimaData)) {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString(ULTIMA_DATA_KEY, dataAtual);
-            editor.putBoolean("META_CONCLUIDA_HOJE", false); // Libera o registro da meta
+            editor.putBoolean("META_CONCLUIDA_HOJE", false);
+            editor.putFloat(META_DIARIA_KEY, 0.0f); // Resetar a meta
             editor.apply();
 
             Log.d("MainActivity", "🔄 Novo dia detectado! Resetando dados do usuário.");
@@ -266,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
 
     // **Reseta o consumo ao iniciar um novo dia**
     private void resetarConsumoDiario() {
@@ -276,10 +307,6 @@ public class MainActivity extends AppCompatActivity {
         atualizarInterface();
         ativarBotoesConsumo(); // 🔥 Reativa os botões
         Log.d("MainActivity", "🌅 Novo dia! Consumo resetado e botões ativados.");
-    }
-
-    private String obterDataAtual() {
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
 
     private void definirEstadoBotoesConsumo(boolean ativar) {

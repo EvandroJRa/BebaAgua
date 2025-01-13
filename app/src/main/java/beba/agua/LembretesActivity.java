@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import android.content.pm.ActivityInfo;
 
 public class LembretesActivity extends AppCompatActivity implements DatabaseHelper.LembretesListener {
 
@@ -56,6 +57,7 @@ public class LembretesActivity extends AppCompatActivity implements DatabaseHelp
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lembretes);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Usa a classe reutilizável SwipeGestureListener
         gestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener(this, HistoricoActivity.class, MainActivity.class));
